@@ -1,0 +1,26 @@
+.convert-expr {
+    position: absolute;
+    right: 30px;
+    top: 0px;
+    z-index: 1;
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+    color: #8080808c;
+}
+
+.remove-expr {
+    position: absolute;
+    right: 4px;
+    top: 0px;
+    z-index: 1;
+    border: 0px;
+    background: transparent;
+    font-size: 20px;
+    color: #8080808c;
+}
+
+
+button>svg:hover {
+    color: rgb(21,140,186)
+}

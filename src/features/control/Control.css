@@ -1,0 +1,14 @@
+.expressions {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.control {
+    display: flex;
+    overflow-y: auto;
+    height: 100%;
+    flex-direction: column;
+    box-shadow: 0 -4px 6px rgb(0 0 0 / 20%);
+}

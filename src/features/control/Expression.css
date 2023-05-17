@@ -1,0 +1,35 @@
+.cm-focused {
+    outline: none !important;
+}
+
+.convert-expr {
+    position: absolute;
+    right: 30px;
+    top: -6px;
+    z-index: 1;
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+    color: #8080808c;
+}
+
+.remove-expr {
+    position: absolute;
+    right: 4px;
+    top: -6px;
+    z-index: 1;
+    border: 0px;
+    background: transparent;
+    font-size: 20px;
+    color: #8080808c;
+}
+
+.error {
+    height: 26px;
+    background: #ff00000f;
+    margin-top: 7px;
+}
+
+button>svg:hover {
+    color: rgb(21,140,186)
+}

@@ -1,0 +1,15 @@
+  StateMachines:
+    StateMachine:
+      label:
+      name: ,
+      charset: a, b,
+      states: S, K, A-B, R,
+      init: S,
+      accept: R,
+      transitions:
+        - S . S,
+        - S $ K,
+        - K a A,
+        - A b B,
+        - B a R,
+        - R . R
