@@ -1,5 +1,4 @@
 import "./Expression.css"
-
 import {useCodeMirror} from "@uiw/react-codemirror";
 import React, {useEffect, useRef} from "react";
 import {useAppDispatch, useAppSelector} from "../../app/hooks";
@@ -10,7 +9,7 @@ import {
     selectFocusedExpressionIndex,
     selectFocusNeeded,
     selectNextExpression,
-    selectPreviousExpression,
+    selectPreviousExpression, setExampleExpressionAt,
     setExpression,
     setFocusedExpressionIndex,
     setFocusNeeded
@@ -19,23 +18,8 @@ import {SiConvertio} from "react-icons/si";
 import {VscChromeClose} from "react-icons/vsc";
 import {javascript} from '@codemirror/lang-javascript';
 
-import * as ts from "typescript";
-import {loadExpression} from "../../logic/loaders/ExpressionLoader";
-
 interface ExpressionProps {
     index: number
-}
-
-class S {
-    name = "";
-
-    constructor(name: string) {
-        this.name = name;
-    }
-}
-
-function s(name: string) {
-    return new S(name);
 }
 
 export const Expression: React.FC<ExpressionProps> = (props) => {
@@ -51,20 +35,6 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
 
     let error = false;
     let errorText = "";
-
-    let exprValue = null;
-
-    try{
-        exprValue = loadExpression(expressions, props.index);
-    } catch(e) {
-        error = true;
-
-        if (typeof e === "string") {
-            errorText = e
-        } else if (e instanceof Error) {
-            errorText = e.message
-        }
-    }
 
     const {setContainer} = useCodeMirror({
         container: editor.current,
@@ -83,35 +53,6 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
         autoFocus: false,
 
         onChange: (value, viewUpdate) => {
-            try {
-                let tsCompile = (source: string, options: ts.TranspileOptions = {}) => {
-                    // Default options -- you could also perform a merge, or use the project tsconfig.json
-                    if (null === options) {
-                        options = {compilerOptions: {module: ts.ModuleKind.CommonJS}};
-                    }
-                    return ts.transpileModule(source, options).outputText;
-                }
-
-                // Make sure it works
-                const source = `
-                    function myfunct(s: string) {
-                        console.log("szia");
-                    }
-                    
-                    function myfunct(s: number) {
-                        console.log("hello");
-                    }
-                    
-                    myfunct("hello");
-                    myfunct(1);
-                `;
-
-                let result = tsCompile(source);
-
-                console.log("Typescriiipt: " + result); // var foo = 'bar';
-            } catch (e) {
-
-            }
             dispatch(setExpression({index: props.index, expression: value}))
         },
 
@@ -129,7 +70,8 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
         }
     }, [setContainer]);
 
-    return <div className={"pt-2 pb-2 border rounded " + (hasFocus ? (error? "border-danger" : "border-primary") : "")}>
+    return <div
+        className={"pt-2 pb-2 border rounded " + (hasFocus ? (error ? "border-danger" : "border-primary") : "")}>
         <div
             style={{position: "relative"}}
 
@@ -145,6 +87,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                         break;
                     case "Enter":
                         if (e.altKey) dispatch(addExpressionAfterIndex(props.index))
+                        else dispatch(setExampleExpressionAt(props.index))
                         break;
                 }
 
@@ -153,8 +96,6 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                 dispatch(setFocusedExpressionIndex(props.index))
             }}
         >
-
-
             <button className={"convert-expr"} onClick={() => {
             }}><SiConvertio/></button>
 

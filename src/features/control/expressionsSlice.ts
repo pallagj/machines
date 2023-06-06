@@ -1,5 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {RootState} from '../../app/store';
+import {loadExamples} from "../../logic/loaders/ExamplesLoader";
 export interface ExpressionsState {
     focusedExpressionIndex: number,
     focusNeeded: boolean,
@@ -37,6 +38,19 @@ export const expressionsSlice = createSlice({
             state.focusedExpressionIndex = action.payload + 1;
             state.focusNeeded = true;
         },
+        setExampleExpressionAt: (state, action: PayloadAction<number>) => {
+            let index = action.payload;
+            let name = state.expressions[index];
+
+            let examples = loadExamples()
+            if(examples?.has(name)) {
+                state.expressions[index] = examples?.get(name)?.entries().next().value[1];
+                //Replace enter at the end to empty
+                state.expressions[index] = state.expressions[index].replace(/\n*$/, "");
+                //print
+                console.log(state.expressions[index])
+            }
+        },
         setDarkMode: (state, action: PayloadAction<boolean>) => {
             state.darkMode = action.payload
         },
@@ -65,6 +79,7 @@ export const {
     setDarkMode,
     setExpression,
     addExpressionAfterIndex,
+    setExampleExpressionAt,
     removeExpression,
     setFocusedExpressionIndex,
     setSelectedExpression,

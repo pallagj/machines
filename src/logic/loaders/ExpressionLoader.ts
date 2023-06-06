@@ -8,10 +8,11 @@ import {loadPushdownMachine} from "./PushdownMachineLoader";
 import {loadGrammar} from "./GrammarLoader";
 import {Expression} from "../expressions/Expression";
 import {Graph} from "../expressions/Graph";
+import {toArray} from "../common";
 
-type ExpressionValue = StateMachine | PushdownMachine |TuringMachine | Grammar;
+type ExpressionValue = StateMachine | PushdownMachine | TuringMachine | Grammar;
 
-function loadYaml(code: string) : ExpressionValue | null {
+function loadYaml(code: string): ExpressionValue | null {
     if (code.startsWith("StateMachine")) {
         return loadStateMachine(code);
     } else if (code.startsWith("TuringMachine")) {
@@ -25,52 +26,63 @@ function loadYaml(code: string) : ExpressionValue | null {
     return null;
 }
 
-export function loadExpression(codes: string[], index: number) :  ExpressionValue | null {
+export function loadExpression(codes: string[], index: number): ExpressionValue | null {
     let code = codes[index];
+
+    //code contains just whitespaces
+    if (code.replace(/\s/g, "").length === 0) return null;
 
     let result = loadYaml(code);
 
-    if(result !== null)
-        return result;
+    if (result !== null) return result;
 
-    if(Expression.cleanCode(code) === null)
-        throw new Error("Invalid expression");
+    let thisCleanCode = Expression.cleanCode(code);
+
+    if (thisCleanCode === null) throw new Error("Invalid expression");
 
     let graph = new Graph("graph")
     let exprNames = new Map<number, string>();
 
-    codes.forEach((c, i) => {
+    let cleanCodes = codes
+        .map(c => Expression.cleanCode(c));
+
+    for(let i = 0; i < codes.length; i++) {
+        let c = codes[i];
+
         let exprValue = loadYaml(c);
-        if(exprValue !== null) {
+        if (exprValue !== null) {
             graph.addNode(exprValue.name);
             exprNames.set(i, exprValue.name);
-            return;
+            break;
         }
 
-        let cleanCode = Expression.cleanCode(c)
+        let cleanCode = cleanCodes[i];
 
-        if(cleanCode !== null) {
+
+        if (cleanCode !== null) {
             graph.addNode(cleanCode.name)
             exprNames.set(i, cleanCode.name);
-            codes[i] = cleanCode.code;
         }
-    })
-
-    codes.forEach((c, i) => {
-        Expression.getDependencies(c, graph.nodes).forEach(d => {
-            if(exprNames.has(i))
-                graph.addEdge(d, exprNames.get(i)!);
-        })
-    })
-
-    let circle = graph.circleFrom(exprNames.get(index)!);
-
-    if(circle !== null) {
-        throw new Error("Circular dependency detected");
     }
 
-    //TODO: topological sort
+    cleanCodes.forEach((code) => {
+        if (code === null) return;
 
+        Expression.getDependencies(code.code, graph.nodes).forEach(d => {
+            graph.addEdge(code.name, d);
+        });
+
+    });
+
+    let circle = graph.circleFrom(thisCleanCode.name);
+
+    if (circle !== null) {
+        throw new Error("Circular dependency detected width: "+ toArray(circle).sort().join(", "));
+    }
+
+    let sorted = graph.topologicalSort();
+
+    console.log(sorted);
 
     return null;
 }

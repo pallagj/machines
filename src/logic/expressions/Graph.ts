@@ -1,4 +1,4 @@
-import {clone, union} from "../common";
+import {clone, cloneSet, union} from "../common";
 
 export class Graph {
     name: string;
@@ -24,7 +24,7 @@ export class Graph {
         if(visited.has(node))
             return visited;
 
-        visited = clone(visited);
+        visited = cloneSet(visited);
 
         visited.add(node);
 
@@ -34,11 +34,35 @@ export class Graph {
             let newCircle = this.circleFrom(to, visited)
 
             if(newCircle !== null) {
-                newCircle = union(circle, newCircle)
+                circle = union(circle, newCircle)
             }
         });
 
         return circle;
     }
 
+    topologicalSort(): string[] {
+        let sorted: string[] = [];
+
+        let visited = new Set<string>();
+
+        this.nodes.forEach(node => {
+            this.topologicalSortHelper(node, visited, sorted);
+        });
+
+        return sorted.reverse();
+    }
+
+    topologicalSortHelper(node: string, visited: Set<string>, sorted: string[]) {
+        if(visited.has(node))
+            return;
+
+        visited.add(node);
+
+        this.edges.get(node)?.forEach(to => {
+            this.topologicalSortHelper(to, visited, sorted);
+        });
+
+        sorted.push(node);
+    }
 }

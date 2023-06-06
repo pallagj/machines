@@ -6,9 +6,13 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 import 'bootstrap/dist/js/bootstrap.js';
+import './examples.yaml'
+// @ts-ignore
+import examples from "./examples.yaml";
 
 const container = document.getElementById('root')!;
 const root = createRoot(container);
+
 
 root.render(
   <React.StrictMode>

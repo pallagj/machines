@@ -53,10 +53,7 @@ export function loadGrammar(grammarText: string): Grammar | null {
         })
 
 
-        let grammar = new Grammar(name, init, variablesText, charsetText, rules);
-
-        console.log("CLASS:"+grammar.classify())
-        return grammar;
+        return new Grammar(name, init, variablesText, charsetText, rules);
     }
 
     return null;

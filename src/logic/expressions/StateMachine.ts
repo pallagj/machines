@@ -8,6 +8,134 @@ export interface ITransition {
     text: string
 }
 
+class AllUnorderedPairs {
+    private pairs: Map<string, number> = new Map<string, number>();
+
+    constructor(states: Set<string>) {
+        states.forEach(p => {
+            states.forEach(q => {
+                if (p < q) this.pairs.set(`${p}-${q}`, 0);
+            });
+        });
+    }
+
+    set(p: string, q: string, value: number) {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        this.pairs.set(`${p}-${q}`, value);
+    }
+
+    get(p: string, q: string): number | null {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        return this.pairs.get(`${p}-${q}`) ?? null;
+    }
+
+    forEach(callback: (p: string, q: string, value: number) => void) {
+        this.pairs.forEach((value, pair) => {
+            let [p, q] = pair.split("-");
+            callback(p, q, value);
+        });
+    }
+
+    forEachAtValue(expectValue: number, callback: (p: string, q: string) => void) {
+        this.pairs.forEach((value, pair) => {
+            if (expectValue === value) {
+                let [p, q] = pair.split("-");
+                callback(p, q);
+            }
+        });
+    }
+
+    clone() {
+        let clonedPairs = new Map<string, number>();
+        this.pairs.forEach((value, pair) => {
+            clonedPairs.set(pair, value);
+        });
+
+        let cloned = new AllUnorderedPairs(new Set<string>());
+        cloned.pairs = clonedPairs;
+        return cloned;
+    }
+
+    delete(p: string, q: string) {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        this.pairs.delete(`${p}-${q}`);
+    }
+
+    print() {
+        this.pairs.forEach((value, pair) => {
+            console.log(pair + " : " + value);
+        });
+    }
+}
+
+class ListForPairs {
+    list = new Map<string, Set<string>>();
+
+    put(p: string, q: string, p1: string, q1: string) {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        if (p1 > q1) {
+            let t = p1;
+            p1 = q1;
+            q1 = t;
+        }
+        if (this.list.has(`${p}-${q}`)) {
+            this.list.set(`${p}-${q}`, new Set([`${p1}-${q1}`]));
+        } else {
+            this.list.get(`${p}-${q}`)?.add(`${p1}-${q1}`);
+        }
+    }
+
+    get(p: string, q: string): Set<string[]> | null {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        let list = this.list.get(`${p}-${q}`);
+        return list ? new Set(toArray(list).map(pair => pair.split("-"))) : null;
+    }
+
+    forEachOnPair(p: string, q: string, callback: (p: string, q: string) => void) {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        let pairs = this.list.get(`${p}-${q}`);
+        if (pairs) {
+            toArray(pairs).forEach(pair => {
+                let [p1, q1] = pair.split("-");
+                callback(p1, q1);
+            });
+        }
+    }
+
+    has(p: string, q: string) {
+        if (p > q) {
+            let t = p;
+            p = q;
+            q = t;
+        }
+        return this.list.has(`${p}-${q}`);
+    }
+}
+
 export class StateMachine implements IMachine {
     name: string;
     charset: Set<string>;
@@ -48,14 +176,14 @@ export class StateMachine implements IMachine {
         }
     }
 
-    getAsGrammar(state=this.init): Grammar | null {
+    getAsGrammar(state = this.init): Grammar | null {
         let rules: Map<string, string[]> = new Map();
 
         this.transitions.forEach((values, key) => {
             values.forEach((sets, key2) => {
-                let rights:string[] = [];
+                let rights: string[] = [];
                 sets.forEach(s => {
-                    rights.push(key2+s)
+                    rights.push(key2 + s)
                 })
                 rules.set(key, rights);
             })
@@ -70,7 +198,8 @@ export class StateMachine implements IMachine {
         this.addEpsStates();
         this.index = 0;
         this.mState = "working";
-        /* history */ {
+        /* history */
+        {
             let char = this.input.charAt(this.index);
             let m = this.clone();
             this.history.data = [];
@@ -111,8 +240,6 @@ export class StateMachine implements IMachine {
         this.addEpsStates();
 
 
-
-
         this.currentStates.forEach((state) => {
             let states = this?.transitions?.get(state)?.get(char);
 
@@ -134,12 +261,12 @@ export class StateMachine implements IMachine {
             if (this.index === this.input.length - 1) {
                 this.mState = hasIntersect(newStates, this.accept) ? "accepted" : "rejected";
             }// else {
-                let m = this.clone();
-                m.index++;
-                char = this.input.charAt(m.index)
-                this.history.data.push({machine: m, tag: toArray(this.currentStates).join("") + char});
-                this.history.index++;
-           // }
+            let m = this.clone();
+            m.index++;
+            char = this.input.charAt(m.index)
+            this.history.data.push({machine: m, tag: toArray(this.currentStates).join("") + char});
+            this.history.index++;
+            // }
 
             this.index++;
         }
@@ -159,6 +286,10 @@ export class StateMachine implements IMachine {
 
     getTapeValue(index: number): string {
         return this.input;
+    }
+
+    delta(from: string, c: string): string {
+        return this.transitions.get(from)?.get(c)?.values().next().value;
     }
 
     getTransitions(): Map<string, Map<string, Set<string>>> {
@@ -404,7 +535,7 @@ export class StateMachine implements IMachine {
 
         let newM = new StateMachine(name, charset, states, init, accept, trans);
 
-        let addNewState = (s1: string, s2: string)  => {
+        let addNewState = (s1: string, s2: string) => {
             if (operation === "union") {
                 if (this.accept.has(s1) || otherMachine.accept.has(s2)) {
                     newM.accept.add(s1 + s2);
@@ -413,13 +544,13 @@ export class StateMachine implements IMachine {
 
             if (operation === "intersect") {
                 if (this.accept.has(s1) && otherMachine.accept.has(s2)) {
-                    newM.accept.add(s1+s2);
+                    newM.accept.add(s1 + s2);
                 }
             }
 
             if (operation === "difference") {
                 if (this.accept.has(s1) && !otherMachine.accept.has(s2)) {
-                    newM.accept.add(s1+s2);
+                    newM.accept.add(s1 + s2);
                 }
             }
         };
@@ -446,19 +577,19 @@ export class StateMachine implements IMachine {
                     if (toM1 != undefined && toM2 != undefined) {
                         trans.get(newState)?.get(c)?.add(Array.from(toM1)[0] + Array.from(toM2)[0]);
                     }
-                    if(toM1 == undefined && toM2 == undefined) {
+                    if (toM1 == undefined && toM2 == undefined) {
                         trans.get(newState)?.get(c)?.add("RR");
                         newM.states.add("RR");
                     }
 
-                    if(toM1 == undefined && toM2 != undefined) {
+                    if (toM1 == undefined && toM2 != undefined) {
                         trans.get(newState)?.get(c)?.add("R" + Array.from(toM2)[0]);
                         newM.states.add("R" + Array.from(toM2)[0]);
                         addNewState("R", Array.from(toM2)[0]);
                     }
 
 
-                    if(toM1 != undefined && toM2 == undefined) {
+                    if (toM1 != undefined && toM2 == undefined) {
                         trans.get(newState)?.get(c)?.add(Array.from(toM1)[0] + "R");
                         newM.states.add(Array.from(toM1)[0] + "R");
                         addNewState(Array.from(toM1)[0], "R");
@@ -472,6 +603,351 @@ export class StateMachine implements IMachine {
         })
 
         return newM;
+    }
+
+
+    naiveMinimize() {
+        let m = this.clone();
+
+        let U = new AllUnorderedPairs(m.states);
+
+        U.forEach((p, q) => {
+            if (m.accept.has(p) && !m.accept.has(q)) U.set(p, q, 1);
+        })
+
+
+        let done = false;
+        while (!done) {
+            done = true;
+            let T = U.clone();
+
+            T.forEachAtValue(0, (p, q) => {
+                m.charset.forEach(a => {
+                    //console.log("## ", p, q, a, m.delta(p, a), m.delta(q, a));
+                    if (T.get(m.delta(p, a), m.delta(q, a)) === 1) {
+                        U.set(p, q, 1);
+                        done = false;
+                    }
+                })
+            })
+        }
+
+
+        let classes = this.sameClassesSimply(U);
+
+        m.name = "fmin" + this.name;
+
+        classes.forEach(states => {
+            this.joinStates(m, states);
+        })
+
+        return m;
+    }
+
+    fastMinimize() {
+        let m = this.clone();
+
+        let U = new AllUnorderedPairs(m.states);
+        let list = new ListForPairs();
+
+        U.forEach((p, q) => {
+            if (m.accept.has(p) && !m.accept.has(q)) U.set(p, q, 1);
+        })
+
+        new AllUnorderedPairs(m.states).forEach((p, q) => {
+            if ((this.accept.has(p) && this.accept.has(q)) || (!this.accept.has(p) && !this.accept.has(q))) {
+                let hasSomeSymbol: boolean = false;
+
+                this.charset.forEach(a => {
+                    if (hasSomeSymbol) return;
+
+                    if (U.get(m.delta(p, a), m.delta(q, a)) === 1) {
+                        U.set(p, q, 1);
+                        hasSomeSymbol = true;
+                        this.setListRecursivelySimply(U, list, p, q);
+                    }
+                })
+
+                if (hasSomeSymbol) {
+                    this.charset.forEach(a => {
+                        if (m.delta(p, a) !== m.delta(q, a)) {
+                            list.put(m.delta(p, a), m.delta(q, a), p, q);
+                        }
+                    })
+                }
+            }
+        });
+
+        let classes = this.sameClassesSimply(U);
+
+        m.name = "fmin" + this.name;
+
+        classes.forEach(states => {
+            this.joinStates(m, states);
+        })
+
+        return m;
+    }
+
+    reverse(): StateMachine {
+        let m = this.clone();
+
+        m.transitions = new Map<string, Map<string, Set<string>>>();
+
+        m.states = new Set<string>();
+        this.states.forEach(s => {
+            if (!this.accept.has(s)) {
+                m.states.add(s);
+            }
+        })
+
+        m.states.add(toArray(this.accept).sort().join(""));
+
+        this.transitions.forEach((value, stateFrom) => {
+            value.forEach((states, char) => {
+                states.forEach(stateTo => {
+                    if (this.accept.has(stateFrom)) {
+                        stateFrom = toArray(this.accept).sort().join("");
+                    }
+
+                    if (this.accept.has(stateTo)) {
+                        stateTo = toArray(this.accept).sort().join("");
+                    }
+
+                    if (m.transitions.get(stateTo) == undefined) {
+                        m.transitions.set(stateTo, new Map<string, Set<string>>());
+                    }
+                    if (m.transitions.get(stateTo)?.get(char) == undefined) {
+                        m.transitions.get(stateTo)?.set(char, new Set<string>());
+                    }
+                    m.transitions.get(stateTo)?.get(char)?.add(stateFrom);
+                })
+            })
+        })
+
+        m.init = toArray(this.accept).sort().join("");
+        m.accept = new Set<string>([this.init]);
+
+
+        return m;
+    }
+
+    minimize3(): StateMachine {
+        return this.reverse().clean().determination().clean().reverse().clean().determination();
+    }
+
+    sameClassesSimply(U: AllUnorderedPairs): Set<Set<string>> {
+        let result = new Set<Set<string>>();
+
+        U.forEach((p, q, value) => {
+            if (value === 1) {
+                U.delete(p, q);
+            }
+        });
+
+        U.forEach((p, q, value) => {
+            U.delete(p, q);
+
+            let sameState = new Set<string>([p, q]);
+
+            let changeOccured = true;
+            while (changeOccured) {
+                changeOccured = false;
+
+                U.forEach((p2, q2, value2) => {
+                    if (intersect(sameState, new Set<string>([p2, q2])).size > 0) {
+                        sameState.add(p2);
+                        sameState.add(q2);
+                        U.delete(p2, q2);
+                        changeOccured = true;
+                    }
+                })
+            }
+
+            result.add(sameState);
+        });
+
+        return result;
+    }
+
+    setListRecursivelySimply(U: AllUnorderedPairs, list: ListForPairs, p: string, q: string): void {
+        U.set(p, q, 1);
+
+        if (list.has(p, q)) {
+            list.forEachOnPair(p, q, (p2, q2) => {
+                U.set(p2, q2, 1);
+                this.setListRecursivelySimply(U, list, p2, q2);
+            });
+        }
+    }
+
+    /*
+    MINIMIZE(M)
+        0. For all unordered pairs {p,q}, p != q, set U({p,q}) := 0
+        1. For all unordered pairs {p,q} with p ∈ F and q ∈ Q − F,
+           set U({p,q}) : = 1
+        2. For each unordered pair {p,q} with either p,q ∈ F or p,q !∈ F do
+            3. If U({δ(p,a),δ(q,a)}) = 1 for some symbol a ∈ ∑ then
+                4. U({p,q}) := 1
+                5. Recursively set U({p,q}) := 1 for all unmarked pairs {p,q} on the list for {p,q},
+                   and all pairs on those lists, etc.
+            6. Else
+                7. For all a ∈ ∑ do
+                    8. If δ(p,a) != δ(q,a), put {p,q} on the list for {δ(p,a),δ(q,a)}
+        9. return(U)
+     */
+    minimize2(): StateMachine {
+        let U: Map<string, number> = new Map<string, number>();
+        let listFor = new Map<string, Set<string>>();
+        this.states.forEach(p => {
+            this.states.forEach(q => {
+                if (p !== q) {
+                    U.set(`${p}-${q}`, 0);
+                }
+            })
+        });
+
+        this.states.forEach(p => {
+            if (this.accept.has(p)) {
+                this.states.forEach(q => {
+                    if (!this.accept.has(q)) {
+                        U.set(`${p}-${q}`, 1);
+                        U.set(`${q}-${p}`, 1);
+                    }
+                })
+            }
+        });
+
+
+        this.states.forEach(p => {
+            this.states.forEach(q => {
+                if ((this.accept.has(p) && this.accept.has(q)) || (!this.accept.has(p) && !this.accept.has(q))) {
+                    let hasSomeSymbol: boolean = false;
+
+                    this.charset.forEach(a => {
+                        if (hasSomeSymbol) return;
+
+                        let dpa: string = this.transitions.get(p)?.get(a)?.values().next().value;
+                        let dqa: string = this.transitions.get(q)?.get(a)?.values().next().value;
+
+                        if (U.get(`${dpa}-${dqa}`) === 1) {
+                            U.set(`${p}-${q}`, 1);
+                            U.set(`${q}-${p}`, 1);
+
+                            hasSomeSymbol = true;
+
+                            this.setListRecursively(U, listFor, `${p}-${q}`);
+                        }
+                    })
+
+                    if (hasSomeSymbol) {
+                        this.charset.forEach(a => {
+                            let dpa: string = this.transitions.get(p)?.get(a)?.values().next().value;
+                            let dqa: string = this.transitions.get(q)?.get(a)?.values().next().value;
+
+                            if (dpa !== undefined && dqa !== undefined) {
+                                if (dpa !== dqa) {
+                                    if (!listFor.has(`${dpa}-${dqa}`)) {
+                                        listFor.set(`${dpa}-${dqa}`, new Set());
+                                    }
+
+                                    listFor.get(`${dpa}-${dqa}`)?.add(`${p}-${q}`);
+                                }
+                            }
+                        })
+                    }
+                }
+            })
+        })
+
+        let classes = this.sameClasses(U);
+
+        let m2 = this.clone();
+        m2.name = "fmin" + this.name;
+
+        classes.forEach(states => {
+            this.joinStates(m2, states);
+        })
+
+        return m2;
+    }
+
+    sameClasses(U: Map<string, number>): Set<Set<string>> {
+        let result = new Set<Set<string>>();
+
+        U.forEach((value, key, map) => {
+            if (value === 1) {
+                map.delete(key)
+            }
+        });
+
+        U.forEach((_, key, map) => {
+            map.delete(key);
+            let pq = key.split("-");
+
+            let sameState = new Set<string>([pq[0], pq[1]]);
+
+            let changeOccured = true;
+            while (changeOccured) {
+                changeOccured = false;
+
+                map.forEach((_, key2) => {
+                    let pq2 = key2.split("-");
+                    if (intersect(sameState, new Set<string>([pq2[0], pq2[1]])).size > 0) {
+                        sameState.add(pq2[0]);
+                        sameState.add(pq2[1]);
+                        map.delete(key2);
+                        changeOccured = true;
+                    }
+                })
+            }
+
+            result.add(sameState);
+        });
+
+        return result;
+    }
+
+
+    joinStates(m: StateMachine, states: Set<string>): void {
+        let newState = Array.from(states).join("");
+
+        m.states = difference(m.states, states);
+        m.states.add(newState);
+
+        if (intersect(states, m.accept).size > 0) {
+            m.accept = difference(m.accept, states);
+            m.accept.add(newState);
+        }
+
+        if (states.has(m.init)) {
+            m.init = newState;
+        }
+
+        m.transitions.forEach((transitions, from, map) => {
+            transitions.forEach((tos, c, map) => {
+                if (intersect(tos, states).size > 0) {
+                    let newTos = difference(tos, states);
+                    newTos.add(newState);
+                    map.set(c, newTos);
+                }
+            });
+            if (states.has(from)) {
+                map.delete(from);
+                map.set(newState, transitions);
+            }
+        });
+    }
+
+    setListRecursively(U: Map<string, number>, listFor: Map<string, Set<string>>, pq: string): void {
+        if (listFor.has(pq)) {
+            listFor.get(pq)?.forEach(pair => {
+                U.set(pair, 1);
+                let k = pair.split("-");
+                U.set(`${k[0]}-${k[1]}`, 1)
+                this.setListRecursively(U, listFor, pair);
+            });
+        }
     }
 
     complement() {
@@ -644,4 +1120,22 @@ export class StateMachine implements IMachine {
         m.transitions = newTransitions;
         return m;
     }
+
+    static createMachine(numberOfStates: number, numberOfChars: number): StateMachine {
+        let states = Array.from({length: numberOfStates}, (_, i) => String.fromCharCode(65 + i));
+        let charset = Array.from({length: numberOfChars}, (_, i) => String.fromCharCode(97 + i));
+        let accept = [states[states.length - 1]];
+
+        let transitions = new Map<string, Map<string, Set<string>>>();
+
+        states.forEach((state: string) => {
+            transitions.set(state, new Map<string, Set<string>>());
+            charset.forEach((c: string) => {
+                transitions.get(state)?.set(c, new Set<string>([states[Math.floor(Math.random() * states.length)]]));
+            })
+        });
+
+        return new StateMachine("m", charset, states, states[0], accept, transitions);
+    }
+
 }
