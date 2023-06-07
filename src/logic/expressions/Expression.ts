@@ -30,19 +30,9 @@ export class Expression {
     }
 
 
-    constructor(code: string, store: Map<string, ExpressionValue>) {
-        code = code
-            .replaceAll(" ", "")
-            .replaceAll("\n", "")
-            .replaceAll("\t", "");
-
-        let expr = /(.*)?=(.*)/.exec(code);
-
-        if (expr != null) {
-            this.name = expr[1];
-            this.code = expr[2];
-        }
-
+    constructor(name: string, code: string, store: Map<string, ExpressionValue>) {
+        this.name = name;
+        this.code = code;
         this.store = store;
     }
 
@@ -173,7 +163,7 @@ export class Expression {
         return null;
     }
 
-    public static cleanCode(code: string) : {name: string, code: string} | null  {
+    public static cleanCode(code: string): { name: string, code: string } | null {
         code = code
             .replaceAll(" ", "")
             .replaceAll("\n", "")
@@ -184,8 +174,7 @@ export class Expression {
 
         if (expr != null) {
             return {
-                name: expr[1],
-                code: expr[2]
+                name: expr[1], code: expr[2]
             }
         }
 

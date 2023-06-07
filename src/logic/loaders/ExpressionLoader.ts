@@ -29,41 +29,49 @@ function loadYaml(code: string): ExpressionValue | null {
 export function loadExpression(codes: string[], index: number): ExpressionValue | null {
     let code = codes[index];
 
-    //code contains just whitespaces
-    if (code.replace(/\s/g, "").length === 0) return null;
+    //This code check
+
+    if (code.replace(/\s/g, "").length === 0)
+        return null;
 
     let result = loadYaml(code);
 
-    if (result !== null) return result;
+    if (result !== null)
+        return result;
 
     let thisCleanCode = Expression.cleanCode(code);
 
-    if (thisCleanCode === null) throw new Error("Invalid expression");
+    if (thisCleanCode === null)
+        throw new Error("Invalid expression");
+
+    //Check with others
 
     let graph = new Graph("graph")
-    let exprNames = new Map<number, string>();
 
-    let cleanCodes = codes
-        .map(c => Expression.cleanCode(c));
+    let cleanedCodes : Map<string, ExpressionValue| string> = new Map<string, ExpressionValue | string>();
 
-    for(let i = 0; i < codes.length; i++) {
-        let c = codes[i];
+    codes.forEach(code => {
+        let exprValue = loadYaml(code);
 
-        let exprValue = loadYaml(c);
         if (exprValue !== null) {
-            graph.addNode(exprValue.name);
-            exprNames.set(i, exprValue.name);
-            continue
+            if(cleanedCodes.has(exprValue.name))
+                throw new Error(`Multiple definition (${exprValue.name})`);
+
+            cleanedCodes.set(exprValue.name, exprValue);
+            return;
         }
 
-        let cleanCode = cleanCodes[i];
+        let cleanCode = Expression.cleanCode(code);
+        if(cleanCode !== null) {
+            if(cleanedCodes.has(cleanCode.name))
+                throw new Error(`Multiple definition (${cleanCode.name})`);
 
-
-        if (cleanCode !== null) {
-            graph.addNode(cleanCode.name)
-            exprNames.set(i, cleanCode.name);
+            cleanedCodes.set(cleanCode.name, cleanCode.code);
         }
-    }
+    })
+
+    graph.nodes = new Set(cleanedCodes.keys());
+
     let toGraphviz = (graph: Graph) => {
         let result = "digraph G {\n";
 
@@ -80,18 +88,15 @@ export function loadExpression(codes: string[], index: number): ExpressionValue 
         return result;
     }
 
-    cleanCodes.forEach((code) => {
-        if (code === null) return;
-
-        Expression.getDependencies(code.code, graph.nodes).forEach(d => {
-            graph.addEdge(code.name, d);
-        });
-
+    cleanedCodes.forEach((value, name) => {
+        if(typeof value === "string") {
+            Expression.getDependencies(value, graph.nodes).forEach(d => {
+                graph.addEdge(name, d);
+            });
+        }
     });
 
     console.log(toGraphviz(graph));
-
-
 
     let circle = graph.circleFrom(thisCleanCode.name);
 
@@ -103,14 +108,23 @@ export function loadExpression(codes: string[], index: number): ExpressionValue 
 
     let store = new Map<string, ExpressionValue>();
     sorted.forEach((name) => {
-        let expression = new Expression("code", store); //TODO: hatékony code
+        if(typeof cleanedCodes.get(name) !== "string") {
+            store.set(name, cleanedCodes.get(name) as ExpressionValue);
+            return;
+        }
+
+
+        let expression = new Expression(name, cleanedCodes.get(name) as string, store);
         let machine = expression.evalMachine()
 
         if(machine == null)
-            throw new Error("Invalid expression");
+            throw new Error("Invalid parse");
 
+        machine.name = name;
         store.set(name, machine)
     });
+
+    console.log(store);
 
     return null;
 }

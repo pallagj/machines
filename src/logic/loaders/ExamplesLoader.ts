@@ -6,7 +6,7 @@ const yaml = require('js-yaml');
 let examplesText = `
 StateMachine:
   Contains aba:
-    name: $name
+    name: name
     charset: a, b
     states: S, K, A-B, R
     init: S
@@ -19,7 +19,7 @@ StateMachine:
       - B a R
       - R . R
   Pair number:
-    name: $name
+    name: name
     charset: 0, 1
     states: S, A, R
     init: S
@@ -31,7 +31,7 @@ StateMachine:
 
 PushdownMachine:
   Example:
-    name: $name
+    name: name
     charset: a, b
     states: A-C
     init: A
@@ -42,7 +42,7 @@ PushdownMachine:
 
 TuringMachine:
   Palindrome:
-    name: $name
+    name: name
     init: start
     charset: a, b
     states:
@@ -76,7 +76,7 @@ TuringMachine:
 
 Grammar:
   Example:
-    name: $name
+    name: name
     charset: a, b
     variables: S, A, B
     init: S
