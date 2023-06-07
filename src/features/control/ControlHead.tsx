@@ -1,25 +1,13 @@
 import "./ControlHead.css";
-import {examplesPromise, loadExamples} from "../../logic/loaders/ExamplesLoader";
 import {useAppDispatch} from "../../app/hooks";
 import {addExpressionAfterIndex, setSelectedEmptyExpression, setSelectedExpression} from "./expressionsSlice";
 import {useState} from "react";
+import {loadExamples} from "../../logic/loaders/ExamplesLoader";
 
 export function ControlHead() {
     const dispatch = useAppDispatch();
 
-    //Use examples state
-    const [exmp, setExamples] = useState(0);
-
-    examplesPromise.finally(() => {
-        if(exmp === 0) setExamples(1);
-    })
-
-
     let examples = loadExamples();
-
-    if (examples == null)
-        return (<div className="control-head"></div>);
-
 
     return (<div className="control-head">
         <div className="dropdown" style={{position: "absolute"}}>
