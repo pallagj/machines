@@ -94,6 +94,7 @@ export class Expression {
         let variable = /^([a-zA-Z0-9]+)(\*)?$/.exec(code);
         let funct = /^([a-zA-Z0-9]+)\((.*)\)(\*)?$/.exec(code);
         let bracket = /^\((.*)\)(\*)?$/.exec(code);
+        let plusRegex = /((.+)\+)+(.+)/.exec(code);
         let plus = code.split("+");
 
         if (variable !== null) {
@@ -161,7 +162,7 @@ export class Expression {
             }
         }
 
-        if (plus !== null) {
+        if (plusRegex !== null) {
             let machine: PushdownMachine | TuringMachine | StateMachine | Grammar | null = null;
             plusList.forEach(m => {
                 if (machine == null) machine = this.eval(m); else machine = this.functions["StateMachine"].union([machine, this.eval(m)]);
@@ -198,6 +199,7 @@ export class Expression {
         let variable = /^([a-zA-Z0-9]+)(\*)?$/.exec(code);
         let funct = /^([a-zA-Z0-9]+)\((.*)\)(\*)?$/.exec(code);
         let bracket = /^\((.*)\)(\*)?$/.exec(code);
+        let plusRegex = /((.+)\+)+(.+)/.exec(code);
         let plus = code.split("+");
 
         if (variable && vars.has(variable[1])) {
@@ -224,7 +226,7 @@ export class Expression {
             }
         }
 
-        if (plus !== null) {
+        if (plusRegex !== null) {
             plusList.forEach(m => {
                 Expression.getDependencies(m, vars).forEach(v => result.add(v))
             })

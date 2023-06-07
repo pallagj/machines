@@ -53,7 +53,7 @@ export function loadExpression(codes: string[], index: number): ExpressionValue 
         if (exprValue !== null) {
             graph.addNode(exprValue.name);
             exprNames.set(i, exprValue.name);
-            break;
+            continue
         }
 
         let cleanCode = cleanCodes[i];
@@ -63,6 +63,21 @@ export function loadExpression(codes: string[], index: number): ExpressionValue 
             graph.addNode(cleanCode.name)
             exprNames.set(i, cleanCode.name);
         }
+    }
+    let toGraphviz = (graph: Graph) => {
+        let result = "digraph G {\n";
+
+        graph.nodes.forEach(n => {
+            result += n + ";\n";
+        });
+
+        graph.edges.forEach((to, from) => {
+            result += from + " -> " + toArray(to) + ";\n";
+        });
+
+        result += "}";
+
+        return result;
     }
 
     cleanCodes.forEach((code) => {
@@ -74,15 +89,28 @@ export function loadExpression(codes: string[], index: number): ExpressionValue 
 
     });
 
+    console.log(toGraphviz(graph));
+
+
+
     let circle = graph.circleFrom(thisCleanCode.name);
 
-    if (circle !== null) {
+    if (circle.size > 0) {
         throw new Error("Circular dependency detected width: "+ toArray(circle).sort().join(", "));
     }
 
     let sorted = graph.topologicalSort();
 
-    console.log(sorted);
+    let store = new Map<string, ExpressionValue>();
+    sorted.forEach((name) => {
+        let expression = new Expression("code", store); //TODO: hatékony code
+        let machine = expression.evalMachine()
+
+        if(machine == null)
+            throw new Error("Invalid expression");
+
+        store.set(name, machine)
+    });
 
     return null;
 }

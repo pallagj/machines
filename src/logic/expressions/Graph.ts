@@ -42,27 +42,24 @@ export class Graph {
     }
 
     topologicalSort(): string[] {
-        let sorted: string[] = [];
+        let sorted = new Array<string>();
 
         let visited = new Set<string>();
 
-        this.nodes.forEach(node => {
-            this.topologicalSortHelper(node, visited, sorted);
-        });
+        let visit = (node: string) => {
+            if(visited.has(node)) return;
 
-        return sorted.reverse();
-    }
+            visited.add(node);
 
-    topologicalSortHelper(node: string, visited: Set<string>, sorted: string[]) {
-        if(visited.has(node))
-            return;
+            this.edges.get(node)?.forEach(to => {
+                visit(to);
+            });
 
-        visited.add(node);
+            sorted.push(node);
+        }
 
-        this.edges.get(node)?.forEach(to => {
-            this.topologicalSortHelper(to, visited, sorted);
-        });
+        this.nodes.forEach(visit);
 
-        sorted.push(node);
+        return sorted;
     }
 }
