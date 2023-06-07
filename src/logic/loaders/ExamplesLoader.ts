@@ -4,14 +4,12 @@ import examples from "../../examples.yaml";
 const yaml = require('js-yaml');
 
 let examplesText: string | null = null;
-fetch(examples)
+export let examplesPromise = fetch(examples)
     .then(r => r.text())
     .then(text => {
         examplesText = text;
-        //refresh all components state
-
+        return loadExamples();
     });
-
 
 
 export function loadExamples(): Map<string, Map<string, string>> | null {
@@ -34,7 +32,7 @@ export function loadExamples(): Map<string, Map<string, string>> | null {
             });
             innerValue = innerValue.replace(/^/gm, '  ');
             innerValue = innerValue.replace(/\s+$/, '');
-            inner.set(innerKey, `${key}\n${innerValue}`);
+            inner.set(innerKey, `${key}:\n${innerValue}`);
         }
 
         out.set(key, inner);

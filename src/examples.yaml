@@ -39,7 +39,12 @@ TuringMachine:
     name: $name
     init: start
     charset: a, b
-    states: start, haveA, haveB, matchA, matchB, back, accept, reject
+    states:
+      - start
+      - haveA, haveB
+      - matchA, matchB
+      - back
+      - accept, reject
     accept: accept
     transitions:
       - start a/_ > haveA

@@ -26,6 +26,15 @@ export const expressionsSlice = createSlice({
         setSelectedExpression: (state, action: PayloadAction<string>) => {
             state.expressions[state.focusedExpressionIndex] = action.payload;
         },
+        setSelectedEmptyExpression: (state, action: PayloadAction<string>) => {
+            if(state.expressions[state.focusedExpressionIndex].trim() === "") {
+                state.expressions[state.focusedExpressionIndex] = action.payload;
+            } else {
+                state.expressions.splice(state.focusedExpressionIndex+1, 0, action.payload);
+                state.focusedExpressionIndex++;
+                state.focusNeeded = true;
+            }
+        },
         setFocusedExpressionIndex: (state, action: PayloadAction<number>) => {
             state.focusedExpressionIndex = action.payload;
             state.focusNeeded = true;
@@ -40,7 +49,7 @@ export const expressionsSlice = createSlice({
         },
         setExampleExpressionAt: (state, action: PayloadAction<number>) => {
             let index = action.payload;
-            let name = state.expressions[index];
+            let name = state.expressions[index].replace(/\n*$/, "");
 
             let examples = loadExamples()
             if(examples?.has(name)) {
@@ -83,6 +92,7 @@ export const {
     removeExpression,
     setFocusedExpressionIndex,
     setSelectedExpression,
+    setSelectedEmptyExpression,
     selectNextExpression,
     selectPreviousExpression,
     setFocusNeeded

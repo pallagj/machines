@@ -9,7 +9,8 @@ import {
     selectFocusedExpressionIndex,
     selectFocusNeeded,
     selectNextExpression,
-    selectPreviousExpression, setExampleExpressionAt,
+    selectPreviousExpression,
+    setExampleExpressionAt,
     setExpression,
     setFocusedExpressionIndex,
     setFocusNeeded
@@ -17,6 +18,7 @@ import {
 import {SiConvertio} from "react-icons/si";
 import {VscChromeClose} from "react-icons/vsc";
 import {javascript} from '@codemirror/lang-javascript';
+import {loadExpression} from "../../logic/loaders/ExpressionLoader";
 
 interface ExpressionProps {
     index: number
@@ -35,6 +37,20 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
 
     let error = false;
     let errorText = "";
+
+    let exprValue = null;
+
+    try {
+        exprValue = loadExpression(expressions, props.index);
+    } catch (e) {
+        error = true;
+
+        if (typeof e === "string") {
+            errorText = e
+        } else if (e instanceof Error) {
+            errorText = e.message
+        }
+    }
 
     const {setContainer} = useCodeMirror({
         container: editor.current,
@@ -76,7 +92,14 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
             style={{position: "relative"}}
 
             ref={editor}
+            onKeyUp={(e) => {
+                switch (e.key) {
+                    case "Enter":
+                        dispatch(setExampleExpressionAt(props.index))
+                        break;
+                }
 
+            }}
             onKeyDownCapture={(e) => {
                 switch (e.key) {
                     case "ArrowUp":
@@ -87,7 +110,6 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                         break;
                     case "Enter":
                         if (e.altKey) dispatch(addExpressionAfterIndex(props.index))
-                        else dispatch(setExampleExpressionAt(props.index))
                         break;
                 }
 
