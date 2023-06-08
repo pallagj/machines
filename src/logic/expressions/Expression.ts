@@ -78,7 +78,6 @@ export class Expression {
     }
 
     private eval(code: string): (PushdownMachine | TuringMachine | StateMachine | Grammar | null) {
-
         if (code === "") return null;
 
         let variable = /^([a-zA-Z0-9]+)(\*)?$/.exec(code);
@@ -124,6 +123,7 @@ export class Expression {
 
                 let m = null;
 
+
                 if (parameters[0]?.constructor.name === "StateMachine") {
                     if (funct[1] === "min") m = this.functions["StateMachine"].min(parameters);
                     if (funct[1] === "det") m = this.functions["StateMachine"].det(parameters);
@@ -161,6 +161,7 @@ export class Expression {
         }
 
         return null;
+
     }
 
     public static cleanCode(code: string): { name: string, code: string } | null {
@@ -169,7 +170,7 @@ export class Expression {
             .replaceAll("\n", "")
             .replaceAll("\t", "");
 
-        let expr = /(.*)?=(.*)/.exec(code);
+        let expr = /(.+)=(.+)/.exec(code); //TODO név nélkül
 
 
         if (expr != null) {

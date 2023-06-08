@@ -10,6 +10,7 @@ import {Expression} from "../expressions/Expression";
 import {Graph} from "../expressions/Graph";
 import {toArray} from "../common";
 
+
 type ExpressionValue = StateMachine | PushdownMachine | TuringMachine | Grammar;
 
 function loadYaml(code: string): ExpressionValue | null {
@@ -26,105 +27,101 @@ function loadYaml(code: string): ExpressionValue | null {
     return null;
 }
 
-export function loadExpression(codes: string[], index: number): ExpressionValue | null {
-    let code = codes[index];
+export function loadExpressions(codes: string[]) {
+    const storeData = window.__STORE__;
 
-    //This code check
-
-    if (code.replace(/\s/g, "").length === 0)
-        return null;
-
-    let result = loadYaml(code);
-
-    if (result !== null)
-        return result;
-
-    let thisCleanCode = Expression.cleanCode(code);
-
-    if (thisCleanCode === null)
-        throw new Error("Invalid expression");
-
-    //Check with others
+    storeData.clear();
 
     let graph = new Graph("graph")
 
-    let cleanedCodes : Map<string, ExpressionValue| string> = new Map<string, ExpressionValue | string>();
+    let values: Map<string, ExpressionValue | string> = new Map<string, ExpressionValue | string>();
 
-    codes.forEach(code => {
+    codes.forEach((code, index) => {
         let exprValue = loadYaml(code);
 
         if (exprValue !== null) {
-            if(cleanedCodes.has(exprValue.name))
-                throw new Error(`Multiple definition (${exprValue.name})`);
+            let duplicated = storeData.setNameToIndex(exprValue.name, index);
 
-            cleanedCodes.set(exprValue.name, exprValue);
+            graph.nodes.add(exprValue.name);
+
+            if (duplicated) {
+                values.delete(duplicated);
+            } else {
+                values.set(exprValue.name, exprValue);
+            }
+
             return;
         }
 
         let cleanCode = Expression.cleanCode(code);
-        if(cleanCode !== null) {
-            if(cleanedCodes.has(cleanCode.name))
-                throw new Error(`Multiple definition (${cleanCode.name})`);
+        if (cleanCode !== null) {
+            let duplicated = storeData.setNameToIndex(cleanCode.name, index);
 
-            cleanedCodes.set(cleanCode.name, cleanCode.code);
+            graph.nodes.add(cleanCode.name);
+
+            if (duplicated) {
+                values.delete(duplicated);
+            } else {
+                values.set(cleanCode.name, cleanCode.code);
+            }
         }
     })
 
-    graph.nodes = new Set(cleanedCodes.keys());
 
-    let toGraphviz = (graph: Graph) => {
-        let result = "digraph G {\n";
-
-        graph.nodes.forEach(n => {
-            result += n + ";\n";
-        });
-
-        graph.edges.forEach((to, from) => {
-            result += from + " -> " + toArray(to) + ";\n";
-        });
-
-        result += "}";
-
-        return result;
-    }
-
-    cleanedCodes.forEach((value, name) => {
-        if(typeof value === "string") {
+    values.forEach((value, name) => {
+        if (typeof value === "string") {
             Expression.getDependencies(value, graph.nodes).forEach(d => {
                 graph.addEdge(name, d);
+                let error = storeData.getErrorByName(d);
+                if (error !== "") {
+                    storeData.setErrorByName(name, error);
+                }
             });
         }
     });
 
-    console.log(toGraphviz(graph));
+    storeData.errors.forEach((error, index) => {
+        if (error !== "" && storeData.getNameByIndex(index) !== "") {
+            graph.removeNode(storeData.getNameByIndex(index)!);
+        }
+    })
 
-    let circle = graph.circleFrom(thisCleanCode.name);
 
-    if (circle.size > 0) {
-        throw new Error("Circular dependency detected width: "+ toArray(circle).sort().join(", "));
-    }
+    graph.nodes.forEach((name) => {
+        let circle = graph.circleFrom(name);
+        if (circle.size > 0) {
+            storeData.setErrorByName(name, "Circular dependency detected width: " + toArray(circle).sort().join(", "));
+        }
+    })
+
 
     let sorted = graph.topologicalSort();
 
-    let store = new Map<string, ExpressionValue>();
     sorted.forEach((name) => {
-        if(typeof cleanedCodes.get(name) !== "string") {
-            store.set(name, cleanedCodes.get(name) as ExpressionValue);
+        if (typeof values.get(name) !== "string") {
+            storeData.setByName(name, values.get(name) as ExpressionValue);
             return;
         }
 
 
-        let expression = new Expression(name, cleanedCodes.get(name) as string, store);
-        let machine = expression.evalMachine()
+        let expression = new Expression(name, values.get(name) as string, storeData.storeByName);
 
-        if(machine == null)
-            throw new Error("Invalid parse");
+        let machine = null;
+        try{
+            machine = expression.evalMachine()
+        }catch (e:any) {
+            storeData.setErrorByName(name, e.message);
+            return;
+        }
+
+        if (machine === null) {
+            storeData.setErrorByName(name, "Error parsing expression");
+            return;
+        }
 
         machine.name = name;
-        store.set(name, machine)
+        storeData.setByName(name, machine);
     });
 
-    console.log(store);
-
-    return null;
+    return storeData;
 }

@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {RootState} from '../../app/store';
 import {loadExamples} from "../../logic/loaders/ExamplesLoader";
+
 export interface ExpressionsState {
     focusedExpressionIndex: number,
     focusNeeded: boolean,
@@ -9,62 +10,49 @@ export interface ExpressionsState {
 }
 
 const initialState: ExpressionsState = {
-    focusedExpressionIndex: 0,
-    focusNeeded: false,
-    expressions: [""],
-    darkMode: false
+    focusedExpressionIndex: 0, focusNeeded: false, expressions: [""], darkMode: false
 };
 
 export const expressionsSlice = createSlice({
-    name: 'expressions',
-    initialState,
-    // The `reducers` field lets us define reducers and generate associated actions
+    name: 'expressions', initialState, // The `reducers` field lets us define reducers and generate associated actions
     reducers: {
         setFocusNeeded: (state, action: PayloadAction<boolean>) => {
             state.focusNeeded = action.payload;
-        },
-        setSelectedExpression: (state, action: PayloadAction<string>) => {
+        }, setSelectedExpression: (state, action: PayloadAction<string>) => {
             state.expressions[state.focusedExpressionIndex] = action.payload;
-        },
-        setSelectedEmptyExpression: (state, action: PayloadAction<string>) => {
-            if(state.expressions[state.focusedExpressionIndex].trim() === "") {
+        }, setSelectedEmptyExpression: (state, action: PayloadAction<string>) => {
+            if (state.expressions[state.focusedExpressionIndex].trim() === "") {
                 state.expressions[state.focusedExpressionIndex] = action.payload;
             } else {
-                state.expressions.splice(state.focusedExpressionIndex+1, 0, action.payload);
+                state.expressions.splice(state.focusedExpressionIndex + 1, 0, action.payload);
                 state.focusedExpressionIndex++;
                 state.focusNeeded = true;
             }
-        },
-        setFocusedExpressionIndex: (state, action: PayloadAction<number>) => {
+        }, setFocusedExpressionIndex: (state, action: PayloadAction<number>) => {
             state.focusedExpressionIndex = action.payload;
             state.focusNeeded = true;
-        },
-        setExpression: (state, action: PayloadAction<{index:number, expression: string}>) => {
+        }, setExpression: (state, action: PayloadAction<{ index: number, expression: string }>) => {
             state.expressions[action.payload.index] = action.payload.expression;
-        },
-        addExpressionAfterIndex: (state, action: PayloadAction<number>) => {
-            state.expressions.splice(action.payload+1, 0, "");
+        }, addExpressionAfterIndex: (state, action: PayloadAction<number>) => {
+            state.expressions.splice(action.payload + 1, 0, "");
             state.focusedExpressionIndex = action.payload + 1;
             state.focusNeeded = true;
-        },
-        setExampleExpressionAt: (state, action: PayloadAction<number>) => {
+        }, setExampleExpressionAt: (state, action: PayloadAction<number>) => {
             let index = action.payload;
             let name = state.expressions[index].replace(/\n*$/, "");
 
             let examples = loadExamples()
-            if(examples?.has(name)) {
+            if (examples?.has(name)) {
                 state.expressions[index] = examples?.get(name)?.entries().next().value[1];
                 //Replace enter at the end to empty
                 state.expressions[index] = state.expressions[index].replace(/\n*$/, "");
                 //print
                 console.log(state.expressions[index])
             }
-        },
-        setDarkMode: (state, action: PayloadAction<boolean>) => {
+        }, setDarkMode: (state, action: PayloadAction<boolean>) => {
             state.darkMode = action.payload
-        },
-        removeExpression: (state, action: PayloadAction<number>) => {
-            if(state.expressions.length <= 1) {
+        }, removeExpression: (state, action: PayloadAction<number>) => {
+            if (state.expressions.length <= 1) {
                 state.expressions[0] = "";
                 return;
             }
@@ -72,12 +60,10 @@ export const expressionsSlice = createSlice({
             let index = action.payload;
             state.expressions.splice(index, 1);
             state.focusNeeded = false;
-        },
-        selectNextExpression: (state) => {
+        }, selectNextExpression: (state) => {
             state.focusedExpressionIndex = Math.min(state.focusedExpressionIndex + 1, state.expressions.length - 1);
             state.focusNeeded = true;
-        },
-        selectPreviousExpression: (state) => {
+        }, selectPreviousExpression: (state) => {
             state.focusedExpressionIndex = Math.max(state.focusedExpressionIndex - 1, 0);
             state.focusNeeded = true;
         }

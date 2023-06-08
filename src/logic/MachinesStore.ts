@@ -5,7 +5,7 @@ import {Expression} from "./expressions/Expression";
 import {loadStateMachine, saveStateMachine} from "./loaders/StateMachineLoader";
 import {loadPushdownMachine, savePushdownMachine} from "./loaders/PushdownMachineLoader";
 import {loadTuringMachine, saveTuringMachine} from "./loaders/TuringMachineLoader";
-import {loadExpression} from "./loaders/ExpressionLoader";
+import {loadExpressions} from "./loaders/ExpressionLoader";
 import {PushdownMachine} from "./expressions/PushdownMachine";
 import {IMachine} from "./IMachine";
 import {Grammar} from "./expressions/Grammar";

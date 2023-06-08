@@ -62,4 +62,17 @@ export class Graph {
 
         return sorted;
     }
+
+    public removeNode(name: string) {
+        this.nodes.delete(name);
+        this.edges = new Map(Array.from(this.edges)
+            .filter((e) => e[0] !== name)
+            .map((edge) =>
+                [
+                    edge[0],
+                    new Set(Array.from(edge[1]).filter((n) => n !== name))
+                ]
+            )
+        );
+    }
 }

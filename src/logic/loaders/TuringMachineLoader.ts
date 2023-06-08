@@ -14,7 +14,6 @@ function parseTransition(
         0 1 2 3 4
      */
 
-
     if (i === 5) {
         out?.get(inputs[0])?.get(inputs[1])?.add(<ITask>{
             nextState: inputs[4] === "&" ? inputs[0] : inputs[4],
@@ -82,7 +81,7 @@ export function loadTuringMachine(machineText: string): TuringMachine | null {
 
         transitionsText.forEach((t: string) => {
             let a = t.split(' ');
-            if (a.length != 4) return null;
+            if (a.length !== 4) return null;
 
             a = [
                 a[0],

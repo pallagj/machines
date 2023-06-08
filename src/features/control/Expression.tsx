@@ -18,10 +18,10 @@ import {
 import {SiConvertio} from "react-icons/si";
 import {VscChromeClose} from "react-icons/vsc";
 import {javascript} from '@codemirror/lang-javascript';
-import {loadExpression} from "../../logic/loaders/ExpressionLoader";
 
 interface ExpressionProps {
-    index: number
+    index: number,
+    errorText: string
 }
 
 export const Expression: React.FC<ExpressionProps> = (props) => {
@@ -35,29 +35,10 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
 
     const editor = useRef<HTMLDivElement>(null);
 
-    let error = false;
-    let errorText = "";
-
-    let exprValue = null;
-
-    try {
-        exprValue = loadExpression(expressions, props.index);
-    } catch (e) {
-        error = true;
-
-        if (typeof e === "string") {
-            errorText = e
-        } else if (e instanceof Error) {
-            errorText = e.message
-        }
-    }
+    let error = props.errorText !== "";
 
     const {setContainer} = useCodeMirror({
-        container: editor.current,
-        value: expression,
-        className: "pb-2 pt-2",
-        height: "auto",
-        basicSetup: {
+        container: editor.current, value: expression, className: "pb-2 pt-2", height: "auto", basicSetup: {
             autocompletion: false,
             lineNumbers: false,
             highlightActiveLine: hasFocus && expression.split('\n').length > 1,
@@ -65,8 +46,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
             foldGutter: true
         },
 
-        extensions: [javascript({jsx: true, typescript: true})],
-        autoFocus: false,
+        extensions: [javascript({jsx: true, typescript: true})], autoFocus: false,
 
         onChange: (value, viewUpdate) => {
             dispatch(setExpression({index: props.index, expression: value}))
@@ -87,7 +67,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
     }, [setContainer]);
 
     return <div
-        className={"pt-2 pb-2 border rounded " + (error ? "border-danger" : (hasFocus?"border-primary":""))}>
+        className={"pt-2 pb-2 border rounded " + (error ? "border-danger" : (hasFocus ? "border-primary" : ""))}>
         <div
             style={{position: "relative"}}
 
@@ -125,9 +105,8 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                 dispatch(removeExpression(props.index));
             }}><VscChromeClose/></button>
         </div>
-        {error && hasFocus ? (
-            <div className="error" role="alert">
-                ⚠️ {errorText}
-            </div>) : <div></div>}
+        {error && hasFocus ? (<div className="error" role="alert">
+            ⚠️ {props.errorText}
+        </div>) : <div></div>}
     </div>
 }
