@@ -131,21 +131,22 @@ export class Grammar {
     getPushdownMachine(): PushdownMachine | null {
         if (this.classify().class !== 2) return null;
 
-        let m = new PushdownMachine(this.name, this.charset, new Set(["S", "A"]), "S", new Set(), new Map());
+        let m = new PushdownMachine(this.name, this.charset, new Set(["S", "A"]), "S", new Set(["A"]), new Map());
 
+        //m.accept = new Set(["A"]);
 
         this.rules.forEach((values, key) => {
             values.forEach(value => {
-                m.addTransition("S", "ε", {read: key, write: value, nextState: "S"})
+                m.addTransition("S", "$", {read: key, write: value, nextState: "S"})
             })
         })
 
         m.charset.forEach(c => {
-            m.addTransition("S", c, {read: c, write: "ε", nextState: "S"})
+            m.addTransition("S", c, {read: c, write: "$", nextState: "S"})
         })
 
 
-        m.addTransition("S", "ε", {read: "Z", write: "Z", nextState: "A"})
+        m.addTransition("S", "$", {read: "Z", write: "Z", nextState: "A"})
 
         return m;
     }

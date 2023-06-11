@@ -5,6 +5,7 @@ import {useAppDispatch, useAppSelector} from "../../app/hooks";
 import {
     addExpressionAfterIndex,
     removeExpression,
+    selectAltEnter,
     selectExpressions,
     selectFocusedExpressionIndex,
     selectFocusNeeded,
@@ -25,17 +26,20 @@ interface ExpressionProps {
 }
 
 export const Expression: React.FC<ExpressionProps> = (props) => {
+    const store = window.__STORE__;
     const dispatch = useAppDispatch();
     let expressions = useAppSelector(selectExpressions)
     let expression = expressions[props.index]
     let selectedIndex = useAppSelector(selectFocusedExpressionIndex);
+    let altEnter = useAppSelector(selectAltEnter);
 
     let focusNeeded = useAppSelector(selectFocusNeeded);
     let hasFocus = props.index === selectedIndex;
 
     const editor = useRef<HTMLDivElement>(null);
-
+    let convCode = store.getCodeByIndex(props.index);
     let error = props.errorText !== "";
+
 
     const {setContainer} = useCodeMirror({
         container: editor.current, value: expression, className: "pb-2 pt-2", height: "auto", basicSetup: {
@@ -81,6 +85,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
 
             }}
             onKeyDownCapture={(e) => {
+                console.log(e.key)
                 switch (e.key) {
                     case "ArrowUp":
                         if (e.ctrlKey) dispatch(selectPreviousExpression());
@@ -91,6 +96,9 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                     case "Enter":
                         if (e.altKey) dispatch(addExpressionAfterIndex(props.index))
                         break;
+                    case "Delete":
+                        if (e.altKey) dispatch(removeExpression(props.index))
+                        break;
                 }
 
             }}
@@ -98,8 +106,9 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                 dispatch(setFocusedExpressionIndex(props.index))
             }}
         >
-            <button className={"convert-expr"} onClick={() => {
-            }}><SiConvertio/></button>
+            {convCode !== null ? (<button className={"convert-expr"} onClick={() => {
+                dispatch(setExpression({index: props.index, expression: convCode!}))
+            }}><SiConvertio/></button>) : <div></div>}
 
             <button className="remove-expr" onClick={() => {
                 dispatch(removeExpression(props.index));
@@ -108,5 +117,9 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
         {error && hasFocus ? (<div className="error" role="alert">
             ⚠️ {props.errorText}
         </div>) : <div></div>}
+
+        {hasFocus && altEnter ?
+            <div style={{marginLeft: "10px"}}>Press <kbd className="keyboard-shortcut">alt</kbd> + <kbd
+                className="keyboard-shortcut">enter</kbd> for a new Expression!</div> : <div></div>}
     </div>
 }

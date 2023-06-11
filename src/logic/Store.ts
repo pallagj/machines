@@ -3,6 +3,10 @@ import {PushdownMachine} from "./expressions/PushdownMachine";
 import {TuringMachine} from "./expressions/TuringMachine";
 import {Grammar} from "./expressions/Grammar";
 import {Graph} from "./expressions/Graph";
+import {saveStateMachine} from "./loaders/StateMachineLoader";
+import {savePushdownMachine} from "./loaders/PushdownMachineLoader";
+import {saveTuringMachine} from "./loaders/TuringMachineLoader";
+import {saveGrammar} from "./loaders/GrammarLoader";
 
 type ExpressionValue = StateMachine | PushdownMachine | TuringMachine | Grammar;
 
@@ -89,5 +93,23 @@ export class Store {
         this.storeByIndex = [];
         this.indexFromName.clear();
         this.errors = [];
+    }
+
+    public  getCodeByIndex(selectedIndex: number): string | null {
+        let selected =  this.getByIndex(selectedIndex);
+
+        if (selected instanceof StateMachine) {
+            return saveStateMachine(selected);
+        } else if (selected instanceof PushdownMachine) {
+            return savePushdownMachine(selected);
+        } else if (selected instanceof TuringMachine) {
+            return saveTuringMachine(selected);
+        } else if (selected instanceof Grammar) {
+            let pushdownMachine = selected.getPushdownMachine()
+            return pushdownMachine!==null?savePushdownMachine(pushdownMachine):null;
+
+        }
+
+        return null;
     }
 }

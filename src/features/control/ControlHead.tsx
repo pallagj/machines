@@ -2,14 +2,15 @@ import "./ControlHead.css";
 import {useAppDispatch} from "../../app/hooks";
 import {setSelectedEmptyExpression} from "./expressionsSlice";
 import {loadExamples} from "../../logic/loaders/ExamplesLoader";
+import {Help} from "../help/Help";
 
 export function ControlHead() {
     const dispatch = useAppDispatch();
 
     let examples = loadExamples();
 
-    return (<div className="control-head">
-        <div className="dropdown" style={{position: "absolute"}}>
+    return (<div className="control-head d-flex flex-row justify-content-between">
+        <div className="dropdown" >
             <button className="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton1"
                     data-bs-toggle="dropdown" aria-expanded="false">
                 Add Expression
@@ -25,8 +26,14 @@ export function ControlHead() {
                                 style={{cursor: "pointer"}}>{example[0]}</a></li>)}
                     </ul>
                 </li>)}
+                <li>
+                    <a className="dropdown-item"
+                       onClick={() => dispatch(setSelectedEmptyExpression(""))}
+                       style={{cursor: "pointer"}}>Empty Expression</a>
+                </li>
             </ul>
         </div>
+        <Help />
     </div>);
 
 

@@ -16,7 +16,7 @@ export class Expression {
             "min": (parameters: Parameter[]) => (parameters[0] as StateMachine).minimize(),
             "complete": (parameters: Parameter[]) => (parameters[0] as StateMachine).complete(parameters[1] as string),
             "det": (parameters: Parameter[]) => (parameters[0] as StateMachine).determination(),
-            "union": (parameters: Parameter[]) => (parameters[0] as StateMachine).union(parameters[1] as StateMachine, "union"),
+            "union": (parameters: Parameter[]) => (parameters[0] as StateMachine).union((parameters[1] as StateMachine), "union"),
             "difference": (parameters: Parameter[]) => (parameters[0] as StateMachine).union(parameters[1] as StateMachine, "difference"),
             "intersect": (parameters: Parameter[]) => (parameters[0] as StateMachine).union(parameters[1] as StateMachine, "intersect"),
             "available": (parameters: Parameter[]) => (parameters[0] as StateMachine).available(),
@@ -155,7 +155,7 @@ export class Expression {
         if (plusRegex !== null) {
             let machine: PushdownMachine | TuringMachine | StateMachine | Grammar | null = null;
             plusList.forEach(m => {
-                if (machine == null) machine = this.eval(m); else machine = this.functions["StateMachine"].union([machine, this.eval(m)]);
+                if (machine == null) machine = this.eval(m); else machine = this.functions["StateMachine"].union([machine, this.eval(m)]).available().clean()   ;
             })
             return machine;
         }

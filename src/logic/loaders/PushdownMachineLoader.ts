@@ -128,7 +128,9 @@ export function savePushdownMachine(obj:PushdownMachine):string {
             })
         })
     })
-    return yaml.dump({'TuringMachine': coded}, {
+    let out= yaml.dump({'PushdownMachine': coded}, {
         condenseFlow: 2
     }).replaceAll("'", "");
+    console.log(out)
+    return out;
 }

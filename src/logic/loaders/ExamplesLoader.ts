@@ -1,5 +1,5 @@
 // @ts-ignore
-import examples from "../../examples.yaml";
+import examples from "../../constants/examples.yaml";
 
 const yaml = require('js-yaml');
 

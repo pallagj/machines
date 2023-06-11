@@ -524,55 +524,72 @@ export class StateMachine implements IMachine {
         return m;
     }
 
+    /*
+    it is deterministic!!
+    it is complete!!
+     */
     union(otherMachine: StateMachine, operation: string) {
-        let name = "U" + this.name + otherMachine.name;
-        let init: string = this.init + otherMachine.init;
-        let charset = Array.from(union(this.charset, otherMachine.charset));
+        let m1 = this.clone();
+        let m2 = otherMachine.clone();
+
+        m2.charset = union(m1.charset, m2.charset);
+        m2 = m2.complete(m1.newStateName(m2.states, "Z"))
+
+
+        m1.charset = union(m1.charset, m2.charset);
+        m1 = m1.complete(m1.newStateName(m1.states, "Z"))
+
+        //m1.makeUniqueStates(m1, m2);
+
+        let name = "U" + m1.name + m2.name;
+        let init: string = m1.init + m2.init;
+        let charset = Array.from(union(m1.charset, m2.charset));
 
         let accept: string[] = [];
         let trans: Map<string, Map<string, Set<string>>> = new Map();
-        let states = [this.init + otherMachine.init];
+        let states = [m1.init + m2.init];
 
         let newM = new StateMachine(name, charset, states, init, accept, trans);
 
+
         let addNewState = (s1: string, s2: string) => {
             if (operation === "union") {
-                if (this.accept.has(s1) || otherMachine.accept.has(s2)) {
+                if (m1.accept.has(s1) || m2.accept.has(s2)) {
                     newM.accept.add(s1 + s2);
                 }
             }
 
             if (operation === "intersect") {
-                if (this.accept.has(s1) && otherMachine.accept.has(s2)) {
+                if (m1.accept.has(s1) && m2.accept.has(s2)) {
                     newM.accept.add(s1 + s2);
                 }
             }
 
             if (operation === "difference") {
-                if (this.accept.has(s1) && !otherMachine.accept.has(s2)) {
+                if (m1.accept.has(s1) && !m2.accept.has(s2)) {
                     newM.accept.add(s1 + s2);
                 }
             }
         };
 
 
-        this.states.forEach(s1 => {
-            otherMachine.states.forEach(s2 => {
+        m1.states.forEach(s1 => {
+            m2.states.forEach(s2 => {
                 let newState = s1 + s2;
 
                 newM.states.add(newState);
 
                 newM.charset.forEach(c => {
-                    if (trans.get(newState) == undefined) {
+                    if (trans.get(newState) === undefined) {
                         trans.set(newState, new Map());
                     }
 
-                    if (trans.get(newState)?.get(c) == undefined) {
+                    if (trans.get(newState)?.get(c) === undefined) {
                         trans.get(newState)?.set(c, new Set());
                     }
 
-                    let toM1 = this.transitions.get(s1)?.get(c);
-                    let toM2 = otherMachine.transitions.get(s2)?.get(c);
+                    let toM1 = m1.transitions.get(s1)?.get(c);
+                    let toM2 = m2.transitions.get(s2)?.get(c);
 
                     if (toM1 != undefined && toM2 != undefined) {
                         trans.get(newState)?.get(c)?.add(Array.from(toM1)[0] + Array.from(toM2)[0]);
@@ -602,6 +619,7 @@ export class StateMachine implements IMachine {
             })
         })
 
+        console.log(newM.available())
         return newM;
     }
 
@@ -1072,11 +1090,18 @@ export class StateMachine implements IMachine {
         return toArray(initStates).sort().join('');
     }
 
-    newStateName(states:Set<string>): string {
+    newStateName(states:Set<string>, start:string=""): string {
+        if(start !== "" && !states.has(start))
+            return start;
+
+        if(start !== "") {
+            start = start + "_";
+        }
+
         let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         let name = "A";
         let j = 0;
-        while (states.has(name)) {
+        while (states.has(start + name)) {
             if(j === chars.length) {
                 name += "A";
                 j=0;
@@ -1085,45 +1110,56 @@ export class StateMachine implements IMachine {
                 j++;
             }
         }
-        return name;
+        return start + name;
     }
     makeUniqueStates(m1:StateMachine, m2: StateMachine): void {
         let unionStates = union(m1.states, m2.states);
-        this.states.forEach(state => {
+        m1.states.forEach(state => {
             if (m2.states.has(state)) {
-                m2.states.delete(state);
-                m2.states.add(this.newStateName(unionStates));
+                let newState = m1.newStateName(unionStates);
+                console.log(`${state} -[${toArray(unionStates)}]> ${newState}`);
 
-                if(m2.init === state) {
-                    m2.init = this.newStateName(unionStates);
-                }
+                this.renameState(state, newState, m2);
 
-                if (m2.accept.has(state)) {
-                    m2.accept.delete(state);
-                    m2.accept.add(this.newStateName(unionStates));
-                }
-
-                m2.transitions.forEach((value, from) => {
-                    if (from === state) {
-                        m2.transitions.delete(from);
-                        m2.transitions.set(this.newStateName(unionStates), value);
-                    }
-
-                    value.forEach((targets, char) => {
-                        if (targets.has(state)) {
-                            targets.delete(state);
-                            targets.add(this.newStateName(unionStates));
-                        }
-                    })
-                });
+                unionStates.add(newState);
             }
         })
+    }
+
+    private renameState(oldStateName: string,  newStateName: string, stateMachine: StateMachine) {
+        stateMachine.states.delete(oldStateName);
+        stateMachine.states.add(newStateName);
+
+        if (stateMachine.init === oldStateName) {
+            stateMachine.init = newStateName;
+        }
+
+        if (stateMachine.accept.has(oldStateName)) {
+            stateMachine.accept.delete(oldStateName);
+            stateMachine.accept.add(newStateName);
+        }
+
+        stateMachine.transitions.forEach((value, from, trans) => {
+            if (from === oldStateName) {
+                trans.delete(from);
+                trans.set(newStateName, value);
+            }
+
+            value.forEach((targets, char) => {
+                if (targets.has(oldStateName)) {
+                    targets.delete(oldStateName);
+                    targets.add(newStateName);
+                }
+            })
+        });
     }
 
     concat(m2: StateMachine): StateMachine {
         let m1 = this.clone();
         m2 = m2.clone();
+        m2.renameState(m2.init, m1.newStateName(union(m1.states, m2.states), "DELETE"), m2);
         this.makeUniqueStates(m1, m2);
+        //m2.states.add(m1.init)
 
 
         m1.states = union(m1.states, m2.states);
@@ -1143,8 +1179,11 @@ export class StateMachine implements IMachine {
 
 
             m1.accept = m2.accept;
+            m1.states.delete(m2.init);
             return m1;
         }
+
+
 
         m2.transitions.forEach((value, from) => {
             m1.transitions.set(from, value);

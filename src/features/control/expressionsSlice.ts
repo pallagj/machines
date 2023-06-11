@@ -6,11 +6,12 @@ export interface ExpressionsState {
     focusedExpressionIndex: number,
     focusNeeded: boolean,
     expressions: string[]
-    darkMode: boolean
+    darkMode: boolean,
+    altEnter: boolean
 }
 
 const initialState: ExpressionsState = {
-    focusedExpressionIndex: 0, focusNeeded: false, expressions: [""], darkMode: false
+    focusedExpressionIndex: 0, focusNeeded: false, expressions: [""], darkMode: false, altEnter: true
 };
 
 export const expressionsSlice = createSlice({
@@ -36,6 +37,7 @@ export const expressionsSlice = createSlice({
         }, addExpressionAfterIndex: (state, action: PayloadAction<number>) => {
             state.expressions.splice(action.payload + 1, 0, "");
             state.focusedExpressionIndex = action.payload + 1;
+            state.altEnter = false;
             state.focusNeeded = true;
         }, setExampleExpressionAt: (state, action: PayloadAction<number>) => {
             let index = action.payload;
@@ -54,18 +56,24 @@ export const expressionsSlice = createSlice({
         }, removeExpression: (state, action: PayloadAction<number>) => {
             if (state.expressions.length <= 1) {
                 state.expressions[0] = "";
+                state.focusNeeded = true;
+                state.focusedExpressionIndex = 0;
                 return;
             }
 
             let index = action.payload;
             state.expressions.splice(index, 1);
-            state.focusNeeded = false;
+            state.focusedExpressionIndex--;
+            state.focusNeeded = true;
+
         }, selectNextExpression: (state) => {
             state.focusedExpressionIndex = Math.min(state.focusedExpressionIndex + 1, state.expressions.length - 1);
             state.focusNeeded = true;
         }, selectPreviousExpression: (state) => {
             state.focusedExpressionIndex = Math.max(state.focusedExpressionIndex - 1, 0);
             state.focusNeeded = true;
+        }, setAltEnter: (state) => {
+            state.altEnter = false;
         }
     }
 });
@@ -81,7 +89,8 @@ export const {
     setSelectedEmptyExpression,
     selectNextExpression,
     selectPreviousExpression,
-    setFocusNeeded
+    setFocusNeeded,
+    setAltEnter
 } = expressionsSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
@@ -92,4 +101,5 @@ export const selectExpressions = (state: RootState) => state.expressionsStore.ex
 export const selectFocusedExpressionIndex = (state: RootState) => state.expressionsStore.focusedExpressionIndex;
 export const selectFocusedExpression = (state: RootState) => state.expressionsStore.expressions[state.expressionsStore.focusedExpressionIndex];
 export const selectFocusNeeded = (state: RootState) => state.expressionsStore.focusNeeded;
+export const selectAltEnter = (state: RootState) => state.expressionsStore.altEnter;
 export default expressionsSlice.reducer;
