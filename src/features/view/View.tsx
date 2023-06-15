@@ -11,16 +11,23 @@ import {IMachine} from "../../logic/IMachine";
 
 
 export function View() {
+    console.log("14. sor")
     const store = window.__STORE__;
+    console.log(`16:${store}`)
 
     useAppSelector(selectExpressions);
     let selectedIndex = useAppSelector(selectFocusedExpressionIndex);
+    console.log(`19: ${selectedIndex}`)
 
     let value = store.getByIndex(selectedIndex);
+    console.log(`23: ${value}`)
 
     if (value === undefined || value === null) {
+        console.log(`26: ${value}`)
         return (<div></div>);
     }
+
+    console.log(`25: ${value.constructor.name}`)
 
     switch (value.constructor.name) {
         case "Grammar": return (<GrammarView grammar={value as Grammar}></GrammarView>);
