@@ -49,8 +49,7 @@ export const expressionsSlice = createSlice({
                 //Replace enter at the end to empty
                 state.expressions[index] = state.expressions[index].replace(/\n*$/, "");
                 //print
-                console.log(state.expressions[index])
-            }
+                            }
         }, setDarkMode: (state, action: PayloadAction<boolean>) => {
             state.darkMode = action.payload
         }, removeExpression: (state, action: PayloadAction<number>) => {

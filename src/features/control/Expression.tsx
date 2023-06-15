@@ -85,7 +85,6 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
 
             }}
             onKeyDownCapture={(e) => {
-                console.log(e.key)
                 switch (e.key) {
                     case "ArrowUp":
                         if (e.ctrlKey) dispatch(selectPreviousExpression());

@@ -39,16 +39,10 @@ export class Expression {
     evalMachine(): StateMachine | TuringMachine | PushdownMachine | Grammar | null {
         let m = this.eval(this.code);
 
-        switch (m?.constructor.name) {
-            case StateMachine.name:
-                return m as StateMachine;
-            case TuringMachine.name:
-                return m as TuringMachine;
-            case PushdownMachine.name:
-                return m as PushdownMachine;
-            case Grammar.name:
-                return m as Grammar;
-        }
+        if(m instanceof StateMachine) return m as StateMachine;
+        if(m instanceof PushdownMachine) return m as PushdownMachine;
+        if(m instanceof TuringMachine) return m as TuringMachine;
+        if(m instanceof Grammar) return m as Grammar;
 
         return null;
     }
@@ -124,7 +118,7 @@ export class Expression {
                 let m = null;
 
 
-                if (parameters[0]?.constructor.name === "StateMachine") {
+                if (parameters[0] instanceof  StateMachine) {
                     if (funct[1] === "min") m = this.functions["StateMachine"].min(parameters);
                     if (funct[1] === "det") m = this.functions["StateMachine"].det(parameters);
                     if (funct[1] === "complete") m = this.functions["StateMachine"].complete([parameters[0], parametersString[1]]);

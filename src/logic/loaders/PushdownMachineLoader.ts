@@ -1,13 +1,9 @@
 import {ISimpleTask, PushdownMachine} from "../expressions/PushdownMachine";
 import {toArray} from "../common";
+
 const yaml = require('js-yaml');
 
-function parseTransition(
-    opts: Array<Array<string>>,
-    a: Array<string>,
-    out: Map</* from */string, Map</* char */string, Set<ISimpleTask>>>,
-    i: number = 0,
-    inputs: Array<string> = []) {
+function parseTransition(opts: Array<Array<string>>, a: Array<string>, out: Map</* from */string, Map</* char */string, Set<ISimpleTask>>>, i: number = 0, inputs: Array<string> = []) {
 
     /*
         A a/b > B
@@ -44,13 +40,13 @@ export function loadPushdownMachine(machineText: string): PushdownMachine | null
             let out: Array<string> = [];
 
             if (typeof x === 'string') {
-                out = x.split(',').filter(t=>t != "").map(t => t.trim());
+                out = x.split(',').filter(t => t != "").map(t => t.trim());
             } else {
                 out = x;
             }
 
-            out = out.filter(t=>t!=null);
-            out = out.flatMap(t => t.split(",").filter(t=>t != "")).map(t => t.trim());
+            out = out.filter(t => t != null);
+            out = out.flatMap(t => t.split(",").filter(t => t != "")).map(t => t.trim());
 
             out = out.filter(s => s != null);
 
@@ -94,13 +90,7 @@ export function loadPushdownMachine(machineText: string): PushdownMachine | null
                 A a a/b B
                 0 1 2 3 4
              */
-            a = [
-                a[0],
-                a[1],
-                a[2].split("/")[0],
-                a[2].split("/")[1],
-                a[3]
-            ];
+            a = [a[0], a[1], a[2].split("/")[0], a[2].split("/")[1], a[3]];
 
             parseTransition([statesText, charsetText, charsetText, [">", "<", "="], statesText], a, transitions);
 
@@ -113,24 +103,23 @@ export function loadPushdownMachine(machineText: string): PushdownMachine | null
     return null;
 }
 
-export function savePushdownMachine(obj:PushdownMachine):string {
-    let coded:any = {};
+export function savePushdownMachine(obj: PushdownMachine): string {
+    let coded: any = {};
     coded.name = obj.name;
     coded.charset = toArray(obj.charset).join(', ');
     coded.states = toArray(obj.states).join(', ');
     coded.init = obj.init;
     coded.accept = toArray(obj.accept).join(', ');
     coded.transitions = [];
-    obj.transitions.forEach((value, from) =>{
+    obj.transitions.forEach((value, from) => {
         value.forEach((tasks, c) => {
             tasks.forEach((task) => {
                 coded.transitions.push(`${from} ${c} ${task.read}/${task.write} ${task.nextState}`);
             })
         })
     })
-    let out= yaml.dump({'PushdownMachine': coded}, {
+    let out = yaml.dump({'PushdownMachine': coded}, {
         condenseFlow: 2
     }).replaceAll("'", "");
-    console.log(out)
     return out;
 }

@@ -42,7 +42,7 @@ export class MachinesStore {
     getActiveGrammar() : Grammar | null {
         let v = this.store[this.activeIndex];
 
-        if(v?.constructor.name === Grammar.name) {
+        if(v instanceof Grammar) {
             return v as Grammar;
         }
 
@@ -52,41 +52,40 @@ export class MachinesStore {
     getActiveMachine(): IMachine | null {
         let v = this.store[this.activeIndex];
 
-        switch (v?.constructor.name) {
-            case StateMachine.name:
-                return v as StateMachine;
-            case TuringMachine.name:
-                return v as TuringMachine;
-            case PushdownMachine.name:
-                return v as PushdownMachine;
-            case Grammar.name:
-                let grammar = v as Grammar;
+        if(v instanceof StateMachine) {
+            return v as StateMachine;
+        } else if (v instanceof TuringMachine) {
+            return v as TuringMachine;
+        } else if(v instanceof PushdownMachine) {
+            return v as PushdownMachine;
+        } else if(v instanceof Grammar) {
+            let grammar = v as Grammar;
 
-                let c = grammar.classify().class;
-                if(c==3) return grammar.getStateMachine();
-                if(c==2) return grammar.getPushdownMachine();
+            let c = grammar.classify().class;
+            if(c==3) return grammar.getStateMachine();
+            if(c==2) return grammar.getPushdownMachine();
 
-                return null;
-            case Expression.name: {
-                let out = (v as Expression).evalMachine();
+            return null;
+        } else if(v instanceof Expression) {
+            let out = (v as Expression).evalMachine();
 
-                if (out?.constructor.name == StateMachine.name)
-                    return out as StateMachine;
+            if (out instanceof StateMachine)
+                return out as StateMachine;
 
-                if (out?.constructor.name == TuringMachine.name)
-                    return out as TuringMachine;
+            if (out instanceof TuringMachine)
+                return out as TuringMachine;
 
-                if (out?.constructor.name == PushdownMachine.name)
-                    return out as PushdownMachine;
-            }
+            if (out instanceof PushdownMachine)
+                return out as PushdownMachine;
         }
+
         return null;
     }
 
     getActiveMachineCode(): string {
         let v = this.store[this.activeIndex];
 
-        if(v?.constructor?.name === StateMachine.name) {
+        if(v instanceof StateMachine) {
             let grammar = (v as StateMachine).getAsGrammar();
 
             if(grammar !== null) {
@@ -96,11 +95,11 @@ export class MachinesStore {
 
         let machine = this.getActiveMachine();
         let text = "";
-        if (machine?.constructor.name == 'TuringMachine') {
+        if (machine instanceof TuringMachine) {
             text = saveTuringMachine(machine as TuringMachine);
-        } else if (machine?.constructor.name == 'StateMachine') {
+        } else if (machine instanceof StateMachine) {
             text = saveStateMachine(machine as StateMachine);
-        } else if (machine?.constructor.name == 'PushdownMachine') {
+        } else if (machine instanceof PushdownMachine) {
             text = savePushdownMachine(machine as PushdownMachine);
         }
 
@@ -120,13 +119,14 @@ export class MachinesStore {
         let v = filtered[0];
 
         if (v?.name === name) {
-            switch (v.constructor.name) {
-                case StateMachine.name:
-                    return v as StateMachine;
-                case TuringMachine.name:
-                    return v as TuringMachine;
-                case Expression.name:
-                    return (v as Expression).evalMachine();
+            if(v instanceof StateMachine) {
+                return v as StateMachine;
+            } else if(v instanceof TuringMachine) {
+                return v as TuringMachine
+            } else if(v instanceof PushdownMachine) {
+                    return v as PushdownMachine
+            } else if(v instanceof Expression) {
+                return (v as Expression).evalMachine();
             }
         }
         return null;

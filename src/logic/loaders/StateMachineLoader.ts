@@ -1,10 +1,11 @@
 import {StateMachine} from "../expressions/StateMachine";
 import {toArray} from "../common";
+
 const yaml = require('js-yaml');
 
 function parseTransition(opts: Array<Array<string>>, a: Array<string>, out: Map<string, Map<string, Set<string>>>, i: number = 0, inputs: Array<string> = []) {
     if (i === 3) {
-        out?.get(inputs[0])?.get(inputs[1])?.add(inputs[2]==="&"?inputs[0]:inputs[2]);
+        out?.get(inputs[0])?.get(inputs[1])?.add(inputs[2] === "&" ? inputs[0] : inputs[2]);
     } else if (a[i] === '.') {
         opts[i].forEach(o => {
             parseTransition(opts, a, out, i + 1, inputs.concat(o));
@@ -15,7 +16,6 @@ function parseTransition(opts: Array<Array<string>>, a: Array<string>, out: Map<
 }
 
 export function loadStateMachine(machineText: string): StateMachine | null {
-
     let parsed = yaml.load(machineText);
     if (parsed !== undefined && parsed.hasOwnProperty('StateMachine')) {
         parsed = parsed['StateMachine'];
@@ -24,13 +24,13 @@ export function loadStateMachine(machineText: string): StateMachine | null {
             let out: Array<string> = [];
 
             if (typeof x === 'string') {
-                out = x.split(',').filter(t=>t != "").map(t => t.trim());
+                out = x.split(',').filter(t => t != "").map(t => t.trim());
             } else {
                 out = x;
             }
 
-            out = out.filter(t=>t!=null);
-            out = out.flatMap(t => t.split(",").filter(t=>t != "")).map(t => t.trim());
+            out = out.filter(t => t != null);
+            out = out.flatMap(t => t.split(",").filter(t => t != "")).map(t => t.trim());
 
             out = out.filter(s => s != null);
 
@@ -48,9 +48,9 @@ export function loadStateMachine(machineText: string): StateMachine | null {
             return out;
         }
 
-        let charsetText = toArray(parsed['charset']);
-        let statesText = toArray(parsed['states']);
-        let acceptText = toArray(parsed['accept']);
+        let charsetText = toArray('' + parsed['charset']);
+        let statesText = toArray('' + parsed['states']);
+        let acceptText = toArray('' + parsed['accept']);
         let transitionsText = toArray(parsed['transitions']);
 
         let transitions = new Map<string, Map<string, Set<string>>>();
@@ -78,15 +78,15 @@ export function loadStateMachine(machineText: string): StateMachine | null {
     return null;
 }
 
-export function saveStateMachine(obj:StateMachine):string {
-    let coded:any = {};
+export function saveStateMachine(obj: StateMachine): string {
+    let coded: any = {};
     coded.name = obj.name;
     coded.charset = toArray(obj.charset).join(', ');
     coded.states = toArray(obj.states).join(', ');
     coded.init = obj.init;
     coded.accept = toArray(obj.accept).join(', ');
     coded.transitions = [];
-    obj.transitions.forEach((value, from) =>{
+    obj.transitions.forEach((value, from) => {
         value.forEach((states, c) => {
             states.forEach(s => {
                 coded.transitions.push(`${from} ${c} ${s}`);

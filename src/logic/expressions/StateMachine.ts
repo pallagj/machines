@@ -72,12 +72,6 @@ class AllUnorderedPairs {
         }
         this.pairs.delete(`${p}-${q}`);
     }
-
-    print() {
-        this.pairs.forEach((value, pair) => {
-            console.log(pair + " : " + value);
-        });
-    }
 }
 
 class ListForPairs {
@@ -176,6 +170,23 @@ export class StateMachine implements IMachine {
         }
     }
 
+    static createMachine(numberOfStates: number, numberOfChars: number): StateMachine {
+        let states = Array.from({length: numberOfStates}, (_, i) => String.fromCharCode(65 + i));
+        let charset = Array.from({length: numberOfChars}, (_, i) => String.fromCharCode(97 + i));
+        let accept = [states[states.length - 1]];
+
+        let transitions = new Map<string, Map<string, Set<string>>>();
+
+        states.forEach((state: string) => {
+            transitions.set(state, new Map<string, Set<string>>());
+            charset.forEach((c: string) => {
+                transitions.get(state)?.set(c, new Set<string>([states[Math.floor(Math.random() * states.length)]]));
+            })
+        });
+
+        return new StateMachine("m", charset, states, states[0], accept, transitions);
+    }
+
     getAsGrammar(state = this.init): Grammar | null {
         let rules: Map<string, string[]> = new Map();
 
@@ -191,7 +202,6 @@ export class StateMachine implements IMachine {
 
         return new Grammar(this.name, this.init, toArray(this.states), toArray(this.charset), rules);
     }
-
 
     reset() {
         this.currentStates = new Set([this.init]);
@@ -337,19 +347,16 @@ export class StateMachine implements IMachine {
         return out;
     }
 
-
     setTapeValue(index: number, input: string): void {
         this.input = input;
         this.reset();
     }
-
 
     run(): void {
         while (this.mState === "working") {
             this.nextState();
         }
     }
-
 
     isSteppable(): boolean {
         return true;
@@ -401,53 +408,6 @@ export class StateMachine implements IMachine {
         this.detHelp(newM, new Set<string>(init));
 
         return newM;
-    }
-
-    private detHelp(newM: StateMachine, states: Set<string>) {
-        if (newM.states.has(Array.from(states).sort().join(""))) {
-            return;
-        }
-
-        let statesString: string = Array.from(states).sort().join("");
-        if (intersect(this.accept, states).size > 0) newM.accept.add(Array.from(states).sort().join(""))
-        newM.states.add(Array.from(states).sort().join(""))
-
-        this.charset.forEach(c => {
-            let newStates: Set<string> = new Set();
-            let acceptState = false;
-
-            states.forEach(state => {
-
-                if (this.transitions.get(state) != undefined && this.transitions.get(state)?.get(c) != undefined) {
-                    let h = this.transitions?.get(state)?.get(c);
-                    if (h !== undefined) {
-                        this.transitions?.get(state)?.get(c)?.forEach(s => {
-                            newStates.add(s);
-
-                            if (this.accept.has(s)) {
-                                acceptState = true;
-                            }
-                        });
-                    }
-                }
-            });
-
-            let newStatesString: string = Array.from(newStates).sort().join("");
-
-            if (newStates.size > 0) {
-                if (newM.transitions.get(statesString) == undefined) newM.transitions.set(statesString, new Map())
-
-                if (newM.transitions.get(statesString)?.get(c) == undefined) newM.transitions.get(statesString)?.set(c, new Set([newStatesString]));
-
-                newM.transitions.get(statesString)?.get(c)?.add(newStatesString);
-                if (acceptState) {
-                    newM.accept.add(newStatesString)
-                }
-
-                this.detHelp(newM, newStates);
-            }
-
-        });
     }
 
     minimize(): StateMachine {
@@ -619,7 +579,6 @@ export class StateMachine implements IMachine {
             })
         })
 
-        console.log(newM.available())
         return newM;
     }
 
@@ -641,7 +600,6 @@ export class StateMachine implements IMachine {
 
             T.forEachAtValue(0, (p, q) => {
                 m.charset.forEach(a => {
-                    //console.log("## ", p, q, a, m.delta(p, a), m.delta(q, a));
                     if (T.get(m.delta(p, a), m.delta(q, a)) === 1) {
                         U.set(p, q, 1);
                         done = false;
@@ -1090,11 +1048,10 @@ export class StateMachine implements IMachine {
         return toArray(initStates).sort().join('');
     }
 
-    newStateName(states:Set<string>, start:string=""): string {
-        if(start !== "" && !states.has(start))
-            return start;
+    newStateName(states: Set<string>, start: string = ""): string {
+        if (start !== "" && !states.has(start)) return start;
 
-        if(start !== "") {
+        if (start !== "") {
             start = start + "_";
         }
 
@@ -1102,56 +1059,28 @@ export class StateMachine implements IMachine {
         let name = "A";
         let j = 0;
         while (states.has(start + name)) {
-            if(j === chars.length) {
+            if (j === chars.length) {
                 name += "A";
-                j=0;
+                j = 0;
             } else {
-                name= name.substring(0, name.length-1) + chars[j];
+                name = name.substring(0, name.length - 1) + chars[j];
                 j++;
             }
         }
         return start + name;
     }
-    makeUniqueStates(m1:StateMachine, m2: StateMachine): void {
+
+    makeUniqueStates(m1: StateMachine, m2: StateMachine): void {
         let unionStates = union(m1.states, m2.states);
         m1.states.forEach(state => {
             if (m2.states.has(state)) {
                 let newState = m1.newStateName(unionStates);
-                console.log(`${state} -[${toArray(unionStates)}]> ${newState}`);
 
                 this.renameState(state, newState, m2);
 
                 unionStates.add(newState);
             }
         })
-    }
-
-    private renameState(oldStateName: string,  newStateName: string, stateMachine: StateMachine) {
-        stateMachine.states.delete(oldStateName);
-        stateMachine.states.add(newStateName);
-
-        if (stateMachine.init === oldStateName) {
-            stateMachine.init = newStateName;
-        }
-
-        if (stateMachine.accept.has(oldStateName)) {
-            stateMachine.accept.delete(oldStateName);
-            stateMachine.accept.add(newStateName);
-        }
-
-        stateMachine.transitions.forEach((value, from, trans) => {
-            if (from === oldStateName) {
-                trans.delete(from);
-                trans.set(newStateName, value);
-            }
-
-            value.forEach((targets, char) => {
-                if (targets.has(oldStateName)) {
-                    targets.delete(oldStateName);
-                    targets.add(newStateName);
-                }
-            })
-        });
     }
 
     concat(m2: StateMachine): StateMachine {
@@ -1166,9 +1095,9 @@ export class StateMachine implements IMachine {
         m1.name = m1.name + 'And' + m2.name;
         m1.charset = union(m1.charset, m2.charset);
 
-        if(m1.isDeterministic() && m2.isDeterministic()) {
+        if (m1.isDeterministic() && m2.isDeterministic()) {
             m2.transitions.forEach((value, from) => {
-                if(from === m2.init) {
+                if (from === m2.init) {
                     m1.accept.forEach(m1AcceptState => {
                         m1.transitions.set(m1AcceptState, value);
                     })
@@ -1182,7 +1111,6 @@ export class StateMachine implements IMachine {
             m1.states.delete(m2.init);
             return m1;
         }
-
 
 
         m2.transitions.forEach((value, from) => {
@@ -1228,21 +1156,79 @@ export class StateMachine implements IMachine {
         return m;
     }
 
-    static createMachine(numberOfStates: number, numberOfChars: number): StateMachine {
-        let states = Array.from({length: numberOfStates}, (_, i) => String.fromCharCode(65 + i));
-        let charset = Array.from({length: numberOfChars}, (_, i) => String.fromCharCode(97 + i));
-        let accept = [states[states.length - 1]];
+    private detHelp(newM: StateMachine, states: Set<string>) {
+        if (newM.states.has(Array.from(states).sort().join(""))) {
+            return;
+        }
 
-        let transitions = new Map<string, Map<string, Set<string>>>();
+        let statesString: string = Array.from(states).sort().join("");
+        if (intersect(this.accept, states).size > 0) newM.accept.add(Array.from(states).sort().join(""))
+        newM.states.add(Array.from(states).sort().join(""))
 
-        states.forEach((state: string) => {
-            transitions.set(state, new Map<string, Set<string>>());
-            charset.forEach((c: string) => {
-                transitions.get(state)?.set(c, new Set<string>([states[Math.floor(Math.random() * states.length)]]));
+        this.charset.forEach(c => {
+            let newStates: Set<string> = new Set();
+            let acceptState = false;
+
+            states.forEach(state => {
+
+                if (this.transitions.get(state) != undefined && this.transitions.get(state)?.get(c) != undefined) {
+                    let h = this.transitions?.get(state)?.get(c);
+                    if (h !== undefined) {
+                        this.transitions?.get(state)?.get(c)?.forEach(s => {
+                            newStates.add(s);
+
+                            if (this.accept.has(s)) {
+                                acceptState = true;
+                            }
+                        });
+                    }
+                }
+            });
+
+            let newStatesString: string = Array.from(newStates).sort().join("");
+
+            if (newStates.size > 0) {
+                if (newM.transitions.get(statesString) == undefined) newM.transitions.set(statesString, new Map())
+
+                if (newM.transitions.get(statesString)?.get(c) == undefined) newM.transitions.get(statesString)?.set(c, new Set([newStatesString]));
+
+                newM.transitions.get(statesString)?.get(c)?.add(newStatesString);
+                if (acceptState) {
+                    newM.accept.add(newStatesString)
+                }
+
+                this.detHelp(newM, newStates);
+            }
+
+        });
+    }
+
+    private renameState(oldStateName: string, newStateName: string, stateMachine: StateMachine) {
+        stateMachine.states.delete(oldStateName);
+        stateMachine.states.add(newStateName);
+
+        if (stateMachine.init === oldStateName) {
+            stateMachine.init = newStateName;
+        }
+
+        if (stateMachine.accept.has(oldStateName)) {
+            stateMachine.accept.delete(oldStateName);
+            stateMachine.accept.add(newStateName);
+        }
+
+        stateMachine.transitions.forEach((value, from, trans) => {
+            if (from === oldStateName) {
+                trans.delete(from);
+                trans.set(newStateName, value);
+            }
+
+            value.forEach((targets, char) => {
+                if (targets.has(oldStateName)) {
+                    targets.delete(oldStateName);
+                    targets.add(newStateName);
+                }
             })
         });
-
-        return new StateMachine("m", charset, states, states[0], accept, transitions);
     }
 
     private isDeterministic() {
