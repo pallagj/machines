@@ -23,7 +23,7 @@ function App() {
             <div style={{width: '30%', minWidth: '15%', display:"flex", flexDirection:"column"}}>
                 <Control/>
             </div>
-            <div style={{width: '80%', minWidth: '15%'}}>
+            <div style={{width: '80%', minWidth: '15%', overflowY: 'scroll'}}>
                 <View/>
             </div>
         </Split>

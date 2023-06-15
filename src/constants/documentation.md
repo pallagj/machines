@@ -1,4 +1,4 @@
-# Machines
+# MachineView
 Ezen a honlapon lehetőséged van különböző matematikai gépeket, és formális nyelveket definiálni,
 szimulálni, ezeken műveleteket végrehajtani és megjeleníteni. A program a nyelvek és automaták című BME-n 
 okatott tárgyra épít ([jegyzet](http://www.cs.bme.hu/~friedl/nyau/jegyzet-13.pdf)).

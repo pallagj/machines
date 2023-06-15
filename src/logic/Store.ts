@@ -12,11 +12,11 @@ type ExpressionValue = StateMachine | PushdownMachine | TuringMachine | Grammar;
 
 export class Store {
     storeByName = new Map<string, ExpressionValue>();
-    storeByIndex: { name: string, value: ExpressionValue | undefined}[] = [];
+    storeByIndex: { name: string, value: ExpressionValue | undefined }[] = [];
     indexFromName = new Map<string, number>();
     errors: string[] = [];
 
-    public setNameToIndex(name: string, index: number) : string | null {
+    public setNameToIndex(name: string, index: number): string | null {
         let duplicatedName: string | null = null;
 
         if (this.indexFromName.has(name)) {
@@ -95,8 +95,8 @@ export class Store {
         this.errors = [];
     }
 
-    public  getCodeByIndex(selectedIndex: number): string | null {
-        let selected =  this.getByIndex(selectedIndex);
+    public getCodeByIndex(selectedIndex: number): string | null {
+        let selected = this.getByIndex(selectedIndex);
 
         if (selected instanceof StateMachine) {
             return saveStateMachine(selected);
@@ -105,8 +105,11 @@ export class Store {
         } else if (selected instanceof TuringMachine) {
             return saveTuringMachine(selected);
         } else if (selected instanceof Grammar) {
-            let pushdownMachine = selected.getPushdownMachine()
-            return pushdownMachine!==null?savePushdownMachine(pushdownMachine):null;
+            switch(selected.classify().class) {
+                case 3: return saveStateMachine(selected.getStateMachine()!);
+                case 2: return savePushdownMachine(selected.getPushdownMachine()!);
+                default: return null;
+            }
 
         }
 
