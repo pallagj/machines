@@ -14,6 +14,7 @@ export function View() {
     console.log("14. sor")
     const store = window.__STORE__;
     console.log(`16:${store}`)
+    console.log(store)
 
     useAppSelector(selectExpressions);
     let selectedIndex = useAppSelector(selectFocusedExpressionIndex);
@@ -21,6 +22,7 @@ export function View() {
 
     let value = store.getByIndex(selectedIndex);
     console.log(`23: ${value}`)
+    console.log(value)
 
     if (value === undefined || value === null) {
         console.log(`26: ${value}`)
@@ -28,6 +30,7 @@ export function View() {
     }
 
     console.log(`25: ${value.constructor.name}`)
+    console.log(value.constructor.name)
 
     switch (value.constructor.name) {
         case "Grammar": return (<GrammarView grammar={value as Grammar}></GrammarView>);
