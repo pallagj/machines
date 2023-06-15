@@ -4,6 +4,10 @@ import {selectExpressions, selectFocusedExpressionIndex} from "../control/expres
 import {GrammarView} from "./grammar/GrammarView";
 import {MachineView} from "./machines/MachineView";
 import {Grammar} from "../../logic/expressions/Grammar";
+import {StateMachine} from "../../logic/expressions/StateMachine";
+import {PushdownMachine} from "../../logic/expressions/PushdownMachine";
+import {TuringMachine} from "../../logic/expressions/TuringMachine";
+import {IMachine} from "../../logic/IMachine";
 
 
 export function View() {
@@ -20,9 +24,9 @@ export function View() {
 
     switch (value.constructor.name) {
         case "Grammar": return (<GrammarView grammar={value as Grammar}></GrammarView>);
-        case "StateMachine": return (<MachineView></MachineView>);
-        case "PushdownMachine": return (<MachineView></MachineView>);
-        case "TuringMachine": return (<MachineView></MachineView>);
+        case "StateMachine": return (<MachineView machine={value as IMachine}></MachineView>);
+        case "PushdownMachine": return (<MachineView machine={value as IMachine}></MachineView>);
+        case "TuringMachine": return (<MachineView machine={value as IMachine}></MachineView>);
         default: return (<div></div>);
     }
 }
