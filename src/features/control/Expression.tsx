@@ -37,7 +37,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
     let hasFocus = props.index === selectedIndex;
 
     const editor = useRef<HTMLDivElement>(null);
-    let convCode = store.getCodeByIndex(props.index);
+    let convCode = store.getCodeByIndex(props.index)?.replace(/\n$/, "");
     let error = props.errorText !== "";
 
 
@@ -74,7 +74,6 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
         className={
         "pt-2 pb-2 border rounded "
             + (error ? "border-danger" : (hasFocus ? "border-primary" : ""))
-            + (props.index === expressions.length - 1 ? " mb-5" : "")
         }>
         <div
             style={{position: "relative"}}
@@ -109,7 +108,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
                 dispatch(setFocusedExpressionIndex(props.index))
             }}
         >
-            {convCode !== null ? (<button className={"convert-expr"} onClick={() => {
+            {(convCode !== null && convCode !== undefined) ? (<button className={"convert-expr"} onClick={() => {
                 dispatch(setExpression({index: props.index, expression: convCode!}))
             }}><SiConvertio/></button>) : <div></div>}
 
@@ -121,8 +120,8 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
             ⚠️ {props.errorText}
         </div>) : <div></div>}
 
-        {hasFocus && altEnter ?
+        {/*hasFocus && altEnter ?
             <div style={{marginLeft: "10px"}}>Press <kbd className="keyboard-shortcut">alt</kbd> + <kbd
-                className="keyboard-shortcut">enter</kbd> for a new Expression!</div> : <div></div>}
+                className="keyboard-shortcut">enter</kbd> for a new Expression!</div> : <div></div>*/}
     </div>
 }

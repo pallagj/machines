@@ -4,6 +4,7 @@ import {selectExpressions} from "./expressionsSlice";
 import "./Control.css";
 import {ControlHead} from "./ControlHead";
 import {loadExpressions} from "../../logic/loaders/ExpressionLoader";
+import {NewExpression} from "./NewExpression";
 
 export function Control() {
     let expressions = useAppSelector(selectExpressions);
@@ -16,6 +17,7 @@ export function Control() {
             {expressions.map((_, index) =>
                 <Expression index={index} key={index} errorText={store.getErrorByIndex(index)}/>
             )}
+            <NewExpression lastIndex={expressions.length - 1}/>
         </div>
     </div>);
 }

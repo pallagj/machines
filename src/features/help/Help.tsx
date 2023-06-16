@@ -244,7 +244,7 @@ export const Help: React.FC<ExpressionProps> = (props) => {
         let s = document.getElementsByTagName("table");
 
         for (let i = 0; i < s.length; i++) {
-            s.item(i)!.className = "table";
+            s.item(i)!.className = "table table-state";
         }
     });
 
