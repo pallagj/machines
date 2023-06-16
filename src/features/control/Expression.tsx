@@ -71,7 +71,11 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
     }, [setContainer]);
 
     return <div
-        className={"pt-2 pb-2 border rounded " + (error ? "border-danger" : (hasFocus ? "border-primary" : ""))}>
+        className={
+        "pt-2 pb-2 border rounded "
+            + (error ? "border-danger" : (hasFocus ? "border-primary" : ""))
+            + (props.index === expressions.length - 1 ? " mb-5" : "")
+        }>
         <div
             style={{position: "relative"}}
 

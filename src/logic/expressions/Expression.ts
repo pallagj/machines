@@ -13,6 +13,7 @@ export class Expression {
 
     functions = {
         "StateMachine": {
+            "random": (parameters: Parameter[]) => StateMachine.createMachine(parseInt(parameters[0] as string), parseInt(parameters[1] as string)),
             "min": (parameters: Parameter[]) => (parameters[0] as StateMachine).minimize(),
             "complete": (parameters: Parameter[]) => (parameters[0] as StateMachine).complete(parameters[1] as string),
             "det": (parameters: Parameter[]) => (parameters[0] as StateMachine).determination(),
@@ -119,6 +120,7 @@ export class Expression {
 
 
                 if (parameters[0] instanceof  StateMachine) {
+                    if (funct[1] === "random") m = this.functions["StateMachine"].random([parametersString[0], parametersString[1]]);
                     if (funct[1] === "min") m = this.functions["StateMachine"].min(parameters);
                     if (funct[1] === "det") m = this.functions["StateMachine"].det(parameters);
                     if (funct[1] === "complete") m = this.functions["StateMachine"].complete([parameters[0], parametersString[1]]);

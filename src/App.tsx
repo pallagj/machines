@@ -20,10 +20,10 @@ function App() {
 
     return (<div className="full-screen">
         <Split className={"w-100"} lineBar={true} style={{height: "100%"}} mode="horizontal">
-            <div style={{width: '30%', minWidth: '15%', display:"flex", flexDirection:"column"}}>
+            <div style={{width: '28%', minWidth: '15%', display:"flex", flexDirection:"column"}}>
                 <Control/>
             </div>
-            <div style={{width: '80%', minWidth: '15%', overflowY: 'scroll'}}>
+            <div style={{width: '72%', minWidth: '15%', overflowY: 'auto'}}>
                 <View/>
             </div>
         </Split>

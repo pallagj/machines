@@ -76,7 +76,7 @@ export function loadPushdownMachine(machineText: string): PushdownMachine | null
             charsetText.forEach((c: string) => {
                 transitions.get(state)?.set(c, new Set<ISimpleTask>());
             })
-            transitions.get(state)?.set("_", new Set<ISimpleTask>());
+            transitions.get(state)?.set("$", new Set<ISimpleTask>());
         })
 
         transitionsText.forEach((t: string) => {

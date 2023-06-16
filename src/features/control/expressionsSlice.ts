@@ -41,11 +41,11 @@ export const expressionsSlice = createSlice({
             state.focusNeeded = true;
         }, setExampleExpressionAt: (state, action: PayloadAction<number>) => {
             let index = action.payload;
-            let name = state.expressions[index].replace(/\n*$/, "");
+            let typeName = state.expressions[index].replace(/\n*$/, "");
 
             let examples = loadExamples()
-            if (examples?.has(name)) {
-                state.expressions[index] = examples?.get(name)?.entries().next().value[1];
+            if (examples?.has(typeName)) {
+                state.expressions[index] = examples?.get(typeName)?.entries().next().value[1];
                 //Replace enter at the end to empty
                 state.expressions[index] = state.expressions[index].replace(/\n*$/, "");
                 //print

@@ -111,7 +111,8 @@ export class PushdownMachine implements IMachine {
                         out?.get(from)?.set(task.nextState, new Set());
                     }
 
-                    out?.get(from)?.get(task.nextState)?.add(`${c}, ${task.read}/${task.write}`);
+                    out?.get(from)?.get(task.nextState)?.add(
+                        `${c.replace('$', 'ε')}, ${task.read.replace('$', 'ε')}/${task.write.replace('$', 'ε')}`);
                 });
             });
         });

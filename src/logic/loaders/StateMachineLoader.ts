@@ -72,6 +72,18 @@ export function loadStateMachine(machineText: string): StateMachine | null {
 
         })
 
+        //remove empty transitions
+        transitions.forEach((value, from) => {
+            value.forEach((states, c) => {
+                if (states.size === 0) {
+                    value.delete(c);
+                }
+            })
+            if (value.size === 0) {
+                transitions.delete(from);
+            }
+        });
+
         return new StateMachine(parsed['name'], charsetText, statesText, parsed['init'], acceptText, transitions);
     }
 

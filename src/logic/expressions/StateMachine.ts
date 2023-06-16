@@ -171,6 +171,7 @@ export class StateMachine implements IMachine {
     }
 
     static createMachine(numberOfStates: number, numberOfChars: number): StateMachine {
+        console.log(`Creating machine with ${numberOfStates} states and ${numberOfChars} chars`)
         let states = Array.from({length: numberOfStates}, (_, i) => String.fromCharCode(65 + i));
         let charset = Array.from({length: numberOfChars}, (_, i) => String.fromCharCode(97 + i));
         let accept = [states[states.length - 1]];
@@ -394,7 +395,21 @@ export class StateMachine implements IMachine {
         return newMachine;
     }
 
+    hasEps(): boolean {
+        return Array.from(this.transitions.values()).some(innerMap =>
+            Array.from(innerMap.keys()).includes("$")
+        );
+    }
+
+    isComplete() : boolean {
+        return Array.from(this.transitions.values()).every(innerMap =>
+            difference(this.charset, new Set(innerMap.keys())).size === 0//Array.from(innerMap.keys()).includes("$")
+        );
+    }
+
     determination(): StateMachine {
+        if(this.hasEps()) throw Error("Machine has ε!")
+        if(!this.isComplete()) throw Error("Machine is not complete!")
         let name = "det" + this.name;
         let init = this.init;
         let charset = Array.from(this.charset);
@@ -411,6 +426,10 @@ export class StateMachine implements IMachine {
     }
 
     minimize(): StateMachine {
+        if(this.hasEps()) throw Error("Machine has ε!")
+        if(!this.isComplete()) throw Error("Machine is not complete!")
+        if(!this.isDeterministic()) throw Error("Machine is not deterministic!")
+
         let m = this.clone();
 
         if (m.accept.size === 0) {
@@ -489,6 +508,14 @@ export class StateMachine implements IMachine {
     it is complete!!
      */
     union(otherMachine: StateMachine, operation: string) {
+        if(this.hasEps()) throw Error("First machine has ε!")
+        if(!this.isComplete()) throw Error("First machine is not complete!")
+        if(!this.isDeterministic()) throw Error("First machine is not deterministic!")
+
+        if(otherMachine.hasEps()) throw Error("Second machine has ε!")
+        if(!otherMachine.isComplete()) throw Error("Second machine is not complete!")
+        if(!otherMachine.isDeterministic()) throw Error("Second machine is not deterministic!")
+
         let m1 = this.clone();
         let m2 = otherMachine.clone();
 
@@ -666,6 +693,10 @@ export class StateMachine implements IMachine {
     }
 
     reverse(): StateMachine {
+        if(this.hasEps()) throw Error("Machine has ε!")
+        if(!this.isComplete()) throw Error("Machine is not complete!")
+        if(!this.isDeterministic()) throw Error("Machine is not deterministic!")
+
         let m = this.clone();
 
         m.transitions = new Map<string, Map<string, Set<string>>>();
@@ -950,9 +981,9 @@ export class StateMachine implements IMachine {
     complete(newState: string): StateMachine {
         let newM = this.clone();
 
-        if (newState == undefined) throw "Nincs definiálva elutasító állapot!";
+        if (newState == undefined) throw new Error("Complete: define reject state!");
 
-        if (this.states.has(newState)) throw "Már létező elutasító állapot!";
+        if (this.states.has(newState)) throw new Error("Complete: reject state already exists!");
 
         newM.states.add(newState);
 
@@ -1023,6 +1054,19 @@ export class StateMachine implements IMachine {
 
             availableStates = difference(availableStates, sharedEpsStates);
         }
+
+        //Remove empty eps transitions
+        newMachine.transitions.forEach((transitions, from, map) => {
+            transitions.forEach((targets, char, map) => {
+                if (targets.size === 0) {
+                    map.delete(char);
+                }
+            });
+
+            if (transitions.size === 0) {
+                map.delete(from);
+            }
+        });
 
         return newMachine;
     }
