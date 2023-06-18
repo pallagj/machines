@@ -137,7 +137,7 @@ export class StateMachine implements IMachine {
     init: string
     accept: Set<string>;
     transitions: Map</* from */string, Map</* char */string, Set</* to */string>>>;
-
+    lastChar = "";
     //Simulation
     private currentStates: Set<string>;
     private input: string;
@@ -222,27 +222,30 @@ export class StateMachine implements IMachine {
 
     }
 
-    nextState(index: string = "") {
+    nextState(from_to: string = "") {
         if (this.mState === "rejected" || this.mState === "accepted") return;
 
         let newStates: Set<string> = new Set();
-        let char = this.input.charAt(this.index);
+        this.lastChar = this.input.charAt(this.index);
 
         //$ states to currentStates
         this.addEpsStates();
 
+        if (from_to !== "") {
+            let [from, to] = from_to.split(":");
 
-        this.currentStates.forEach((state) => {
-            let states = this?.transitions?.get(state)?.get(char);
-
-            if (states !== undefined && index !== "" && states.has(index[index.length - 1])) {
-                states = new Set<string>();
-                states.add(index[index.length - 1]);
-            }
-
-            if (states !== undefined) newStates = union(newStates, states);
-        })
-
+            this?.transitions?.get(from)?.forEach((states, c) => {
+                if(states.has(to) && (c === "$" || c === this.lastChar)) {
+                    newStates = new Set<string>(to);
+                    this.lastChar = c
+                }
+            });
+        } else {
+            this.currentStates.forEach((state) => {
+                let states = this?.transitions?.get(state)?.get(this.lastChar);
+                if (states !== undefined) newStates = union(newStates, states);
+            })
+        }
 
         if (newStates.size === 0) {
             this.mState = "rejected";
@@ -252,13 +255,10 @@ export class StateMachine implements IMachine {
 
             if (this.index === this.input.length - 1) {
                 this.mState = hasIntersect(newStates, this.accept) ? "accepted" : "rejected";
-            }// else {
-            let m = this.clone();
-            m.index++;
-            char = this.input.charAt(m.index)
-            // }
+            }
 
-            this.index++;
+            if(this.lastChar !== "$")
+                this.index++;
         }
     }
 
@@ -282,8 +282,8 @@ export class StateMachine implements IMachine {
         return this.transitions.get(from)?.get(c)?.values().next().value;
     }
 
-    getTransitions(){
-        let out: Map<string, Map<string, Set<{label:string,selected: boolean}>>> = new Map();
+    getTransitions() {
+        let out: Map<string, Map<string, Set<{ label: string, selected: boolean }>>> = new Map();
 
         this?.transitions.forEach((v0, from) => {
             v0.forEach((vl, c) => {
@@ -296,7 +296,7 @@ export class StateMachine implements IMachine {
                         out?.get(from)?.set(to, new Set());
                     }
 
-                    out?.get(from)?.get(to)?.add({label:c.replace('$', 'ε'), selected: this.input[this.index] === c})
+                    out?.get(from)?.get(to)?.add({label: c.replace('$', 'ε'), selected: this.input[this.index] === c})
                 });
             });
         });
@@ -583,7 +583,6 @@ export class StateMachine implements IMachine {
 
         return newM;
     }
-
 
     naiveMinimize() {
         let m = this.clone();
@@ -890,7 +889,6 @@ export class StateMachine implements IMachine {
         return result;
     }
 
-
     joinStates(m: StateMachine, states: Set<string>): void {
         let newState = Array.from(states).join("");
 
@@ -1184,10 +1182,10 @@ export class StateMachine implements IMachine {
     }
 
     getSimulationState(): MachineState {
-        let char = this.index === 0 ? '' : this.input[this.index - 1];
+        let char = this.lastChar;
 
         return {
-            label: char + Array.from(this.getCurrentStates()).join(''),
+            label: char.replace("$", "ε") + Array.from(this.getCurrentStates()).join(''),
             tapes: this.getTapes(),
             indexes: this.getIndexes(),
             currentStates: Array.from(this.getCurrentStates()),
@@ -1287,5 +1285,20 @@ export class StateMachine implements IMachine {
             })
         })
         return isDeterministic;
+    }
+
+    hasTransition(from: string, to: string): boolean {
+        let char = this.input.charAt(this.index);
+
+        if(!this.currentStates.has(from))
+            return false;
+
+        let result = false;
+        this.transitions.get(from)?.forEach((value, c) => {
+            if (value.has(to) && (c === char || c === '$') ) {
+                result = true;
+            }
+        })
+        return result;
     }
 }

@@ -190,7 +190,7 @@ export class TuringMachine implements IMachine {
     }
 
     getTapes(): string[] {
-        return [(this.tape.join("") + (this.index >= this.tape.length - 1 ? "_" : "")).replaceAll("_", "␣")];
+        return [this.tape.join("")] //[(+ (this.index >= this.tape.length - 1 ? "_" : "")).replaceAll("_", "␣")];
     }
 
     getSimulationState(): MachineState {
@@ -212,5 +212,21 @@ export class TuringMachine implements IMachine {
         this.originalInput = state.tapes[0]
         this.index = state.indexes[0];
         this.mState = state.state;
+    }
+
+    hasTransition(from: string, to: string): boolean {
+        if(this.index < 0) return false;
+
+        if(this.currentState !== from)
+            return false;
+
+        let char = this.tape[this.index];
+
+        let result = false;
+        this.transitions.get(from)?.forEach((value, key) => {
+            if(key === char && Array.from(value).some((task) => task.nextState === to))
+                result = true;
+        })
+        return result;
     }
 }

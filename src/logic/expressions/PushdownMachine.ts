@@ -69,7 +69,7 @@ export class PushdownMachine implements IMachine {
     }
 
     getCurrentStates(): Set<string> {
-        return new Set<string>([this.currentState]);
+        return new Set<string>(this.currentState);
     }
 
     getMachineState(): "rejected" | "accepted" | "working" | "stopped" {
@@ -218,6 +218,20 @@ export class PushdownMachine implements IMachine {
         this.index = state.indexes[0];
         this.currentState = state.currentStates[0];
         this.mState = state.state;
+    }
+
+    hasTransition(from: string, to: string): boolean {
+        if(this.index < 0) return false;
+
+        if(this.currentState !== from) return false;
+
+        let char = this.input[this.index];
+        let result = false;
+        this.transitions.get(from)?.forEach((value, key) => {
+            if(key === char && Array.from(value).some((task) => task.nextState === to))
+                result = true;
+        })
+        return result;
     }
 
 }

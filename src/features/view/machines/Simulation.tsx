@@ -9,13 +9,14 @@ import {
     nextSimulation,
     runSimulation,
     selectCurrentHistory,
-    selectCurrentTapes, selectCurrentTapesFormatted,
+    selectCurrentTapesFormatted,
     selectHistory,
     selectHistoryLabels,
     setTape
 } from "./simulationSlice";
 import {ImPlay3, ImStop2} from "react-icons/im";
 import {VscCheck, VscChromeClose, VscDebugStepOver} from "react-icons/vsc";
+import {AiOutlineEdit} from "react-icons/ai";
 
 interface MachineProps {
     machine: IMachine
@@ -35,6 +36,30 @@ export const Simulation: React.FC<MachineProps> = (props) => {
     useEffect(() => {
         m.reset();
         dispatch(initSimulation(m));
+
+        let edges = document.getElementsByClassName("edge");
+
+        let clickHandlers: [Element, (() => void)][] = [];
+        for (let i = 0; i < edges.length; i++) {
+            let edge = edges.item(i);
+            if (edge === null) continue;
+            let clickHandler = () => {
+                if (edge !== null && edge.id !== null) {
+                    let [from, to] = edge.id.split(":");
+                    if (m.hasTransition(from, to)) {
+                        dispatch(nextSimulation({machine: m, char: edge.id}))
+                    }
+                }
+            };
+            edge.addEventListener("click", clickHandler);
+            clickHandlers.push([edge, clickHandler]);
+        }
+
+        return () => {  // cleanup function
+            for (let [edge, clickHandler] of clickHandlers) {
+                edge.removeEventListener("click", clickHandler);
+            }
+        };
     }, []);
 
     //dispatch(initSimulation(m)) //TODO ?
@@ -54,7 +79,7 @@ export const Simulation: React.FC<MachineProps> = (props) => {
                        onClick={() => dispatch(selectHistory(index))}
                        style={{
                            textTransform: "none",
-                           background: (current ? "#28b62c" : "#f0f0f0"),
+                           background: (current ? "#158CBA" : "#f0f0f0"),
                            color: (current ? "white" : "black")
                        }}>
                         {label}
@@ -83,14 +108,29 @@ export const Simulation: React.FC<MachineProps> = (props) => {
 
             <div className={"tape-results"}>
                 {tapes.map((tape, tapeIndex) => {
+                    if (activeTapeIndex === tapeIndex) {
+                        return <div className={"d-flex flex-row align-items-center"}>
+                            <input className={"controller form-control"}
+                                   ref={textInputRef}
+                                   onChange={(s) => {
+                                       dispatch(initSimulation(m))
+                                       dispatch(setTape({
+                                           tapeIndex: tapeIndex, value: s.target.value
+                                       }))
+                                   }}
+                                   onBlur={(c) => setActiveTapeIndex(-1)}
+                            />
+                            <div className={""}>
+                                <button className={"btn p-1 btn-primary"} onClick={() => {
+                                    setActiveTapeIndex(-1)
+                                }}>
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    }
                     return (<div className={"tape"}>
-                        {activeTapeIndex === tapeIndex ? (<input className={"controller input"}
-                                                                 ref={textInputRef}
-                                                                 onChange={(s) => dispatch(setTape({
-                                                                     tapeIndex: tapeIndex, value: s.target.value
-                                                                 }))}
-                                                                 onBlur={(c) => setActiveTapeIndex(-1)}
-                        />) : (tape.split("").map((c, index) => {
+                        {(tape.split("").map((c, index) => {
                             return (<div
                                 className={"cell" + (index === m?.getTapeIndex(tapeIndex) ? " active" : "")}
                                 onDoubleClick={(c) => {
@@ -101,6 +141,14 @@ export const Simulation: React.FC<MachineProps> = (props) => {
                                 {c}
                             </div>);
                         }))}
+                        <div className={""}>
+                            <button className={"btn btn-sm p-1"} onClick={() => {
+                                setActiveTapeIndex(tapeIndex);
+                                textInputRef.current?.focus();
+                            }}>
+                                <AiOutlineEdit/>
+                            </button>
+                        </div>
                     </div>)
                 })}
 

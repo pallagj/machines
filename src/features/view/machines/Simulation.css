@@ -59,7 +59,7 @@
 
 .tape .active {
     border-radius: 8px;
-    background: #dc3545;
+    background: #158CBA;
     color: white;
 }
 
@@ -74,4 +74,21 @@
 
 a {
     text-transform: none;
+}
+
+.edge {
+    cursor: pointer;
+}
+
+.edge:hover {
+    stroke: darkred;
+}
+
+.edge:hover > polygon {
+    stroke: darkred;
+    fill: darkred;
+}
+
+.edge:hover > path {
+    stroke: darkred;
 }

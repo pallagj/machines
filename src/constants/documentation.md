@@ -1,27 +1,27 @@
-# MachineView
-Ezen a honlapon lehetőséged van különböző matematikai gépeket, és formális nyelveket definiálni,
-szimulálni, ezeken műveleteket végrehajtani és megjeleníteni. A program a nyelvek és automaták című BME-n 
-okatott tárgyra épít ([jegyzet](http://www.cs.bme.hu/~friedl/nyau/jegyzet-13.pdf)).
+# Machines
+On this website you can define various mathematical machines and formal grammars,
+simulate, perform and visualise operations on them. The programme is available on the BME website Languages and Automata.
+([note](http://www.cs.bme.hu/~friedl/nyau/jegyzet-13.pdf)).
 
-Az oldal megnyitásakor bal oldalon van egy lista található, amelyben az adott listaelem szerkeszthető.
-Új elemet az aktuálisan szerkesztett elem után a `alt` + `enter` parancsal tudunk beszúrni.
+When the page is opened, there is a list on the left where you can edit the list item.
+You can insert a new item after the one you are currently editing by typing `alt` + `enter`.
 
-Saját magunk is definiálhatjuk a leíró szöveget, vagy a lenyíló `Add machine` menüvel tudunk példát betölteni.
-Különböző típusú leíró szöveget készíthetünk el:
- - [Véges automata](#vges-automata)
- - [Veremautomata](#veremautomata)
- - [Turing-gép](#turing-gp)
- - [Kifejezés](#kifejezs)
+You can also define your own descriptive text or use the `Add Expression' menu that appears to load an example.
+You can create several types of descriptive text:
+- Finite automaton
+- Pushdown machine
+- Turing machine
+- Formal grammar
+- Expression
 
-A lista elemeit az `x`-re kattintva eltüntethetjük, 
-a [konvertálás](#kifejezsbl-llapotgp) gombra (forgó nyíl) a kifejezésből gép konvertálását végezhetjük el.
+Click on `x` to remove items from the list, click on the convert button (rotating arrow) to convert the expression into a machine.
 
-Jobb oldalon láthatjuk a gráfos megjelenítését az adott gépünknek,
-továbbá a hozzá tartozó átmenet táblázatot. 
-Ezen a felületen van lehetőségünk a [szimuláció](#szimulci)-ra
+On the right you can see the graphical representation of our machine and the corresponding transition table.
+On this screen we have the possibility to simulate.
 
-## Véges automata
-Vizsgáljuk meg a következő Véges automata kódját:
+
+## Finite automaton
+Let us examine the code of the following finite automaton:
 ````yaml
 FiniteAutomaton:
   name: M1
@@ -37,20 +37,22 @@ FiniteAutomaton:
     - B a R
     - R . R
 ````
-YAML szintaxist használva a `name`-el adjuk meg az Véges automata nevét, a `charset`-el a bemeneti abc-t. A `states`-nél az egyes állapotokat,
-az `init`-nél a kezdő állapotot, az `accept`-nél az elfogadó állapotokat, és végül a `transitions`-ban fogalmazzuk meg
-az átmeneteket:
+Using YAML syntax, use `name` to specify the name of the finite automaton, and `charset` to specify the input charset. With `states`, we specify the states,
+the initial state in `init`, the accepting states in `accept`, and finally in `transitions`
+the transitions:
 ```
-[induló állapot] [beolvasott karakter] [új állapot]
+[previous state] [input character] [new state]
 ```
-Bármelyik `[]` helyén használhatjuk a `.`-ot, amire a program a háttérben az összes lehetőséggel behelyettesíti
-(állapotnál az összes állapotot, abc-nél meg az összes lehetséges karaktert). Például az `R . R` jelenti, hogy az
-`R` állapotban bármilyen karaktert beolvasva az `R` állapotba jutunk.
+In place of any `[]` you can use `.`, which the program will insert in the background with all the options
+(for state, all states, for the charset, all possible characters). For example, `R . R` means that the
+`R` means that any character in the state `R` will result in the state `R`.
 
-Lehetőésünk van az `[új állapot]`-nál az `&` jel használatára, ha az `[induló állapot]`-nál a `.`-ot használtunk, ekkor
-az `[új állapot]` mindig az `[induló állapot]`-al egyezik meg.
-## Veremautomata
-```yaml
+We may use the `&` character in `[new state]` if we have used `.` in `[previous state]`, in which case
+the `[new state]` is always the same as `[previous state]`.
+
+
+## Pushdown automaton
+``yaml
 PushdownAutomaton:
 name: M1
 charset: a, b
@@ -61,20 +63,21 @@ transitions:
 - A a a/b B
 - B b b/a C
 ```
-
-YAML szintaxist használva a `name`-el adjuk meg az veremautomata nevét, a `charset`-el a bemeneti abc-t. A `states`-nél az egyes állapotokat,
-az `init`-nél a kezdő állapotot, az `accept`-nél az elfogadó állapotokat, és végül a `transitions`-ban fogalmazzuk meg
-az átmeneteket:
+Using the YAML syntax, use `name` to specify the name of the stack automaton, and `charset` to specify the input charset. With `states`, we specify the states,
+the initial state in `init`, the accepting states in `accept`, and finally in `transitions`
+the transitions:
 ```
-[induló állapot] [beolvasott karakter] [veremről olvasott]/[veremre írt] [új állapot]
+[previous state] [readed character] [read from stack]/[write to stack] [new state]
 ```
-Bármelyik `[]` helyén használhatjuk a `.`-ot, amire a program a háttérben az összes lehetőséggel behelyettesíti
-(állapotnál az összes állapotot, abc-nél meg az összes lehetséges karaktert). 
+You can use `.` in place of any `[]`, which the program will insert in the background with all the options
+(all states for state and all possible characters for charset). 
+
+You can use the `&` character in `[new state]` if you used `.` in `[previous state]`, then
+
+the `[new state]` is always the same as `[previous state]`. The same works for `[read from stack]` and `[write to stack]`.
 
 
-Lehetőésünk van az `[új állapot]`-nál az `&` jel használatára, ha az `[induló állapot]`-nál a `.`-ot használtunk, ekkor
-az `[új állapot]` mindig az `[induló állapot]`-al egyezik meg. Ugyanez működik a `[veremről olvasott]` és a `[veremre írt]` karakterrel.
-## Turing-gép
+## Turing machine
 ```yaml
 TuringMachine:
   name: palindrom
@@ -106,55 +109,57 @@ TuringMachine:
     - back ./& < back
     - back _/& > start
 ```
-YAML szintaxist használva a `name`-el adjuk meg az Turing-gép nevét, a `charset`-el a szalag abc-t. A `states`-nél az egyes állapotokat,
-az `init`-nél a kezdő állapotot, az `accept`-nél az elfogadó állapotokat, és végül a `transitions`-ban fogalmazzuk meg
-az átmeneteket:
+Using the YAML syntax, use `name` to specify the name of the Turing machine, and `charset` to specify the tape charset. With `states`, we specify the states,
+the initial state in `init`, the accepting states in `accept`, and finally in `transitions`
+the transitions:
 ```
-[induló állapot] [olvasott karakter]/[írt karakter] [fej mozgatás] [új állapot]
+[previous state] [read character]/[write character] [head movement] [new state] [new state]
 ```
-Bármelyik `[]` helyén használhatjuk a `.`-ot, amire a program a háttérben az összes lehetőséggel behelyettesíti
-(állapotnál az összes állapotot, abc-nél meg az összes lehetséges karaktert, fej mozgatásánál az összes irányt).
-A fej mozgatásánál a `>` jobbra mozgatást, `<` balra, végül a `=` helyben hagyást jelenti.
+We can use `.` in place of any `[]`, which the program will insert in the background with all the options
+(all states for state, all possible characters for charset, all directions for head movement).
+When moving the head, `>` means move right, `<` means move left, and finally `=` means leave in place.
 
-Lehetőésünk van az `[új állapot]`-nál az `&` jel használatára, ha az `[induló állapot]`-nál a `.`-ot használtunk, ekkor
-az `[új állapot]` mindig az `[induló állapot]`-al egyezik meg. Ugyanez működik a `[olvasott karakter]` és a `[írt karakter]` karakterrel.
+You may use the `&` character for `[new state]` if you have used `.` for `[previous state]`, then
+the `[new state]` is always the same as `[previous state]`. The same works for `[read character]` and `[write character]`.
 
-A `_` karakter alapértelmezetten a szalag `abc` része, jelentése az üres karakter.
-## Kifejezés
-Lehetőségünk van kifejezés megadására is, amely a korábbi gépekre hivatkozva, hozhat létre új gépet.
-Például egy Véges automataet minimalizálhatunk, vagy determinisztikussá tehetünk.
+The `_` character is by default part of the `charset` of the tape, meaning the empty character.
 
-A következő szintaktikát használhatjuk:
+
+## Expression
+You can also specify an expression that can be used to create a new machine by referring to previous machines.
+For example, a finite automaton can be minimized or made deterministic.
+
+We can use the following syntax:
 ```
 M3 = union(M1, M2)
 ```
 
-Ebben az esetben létrehozunk egy új Véges automataet az M1 és az M2 Véges automata uniójából.
-Ebből kapunk egy új Véges automataet, és ezt egy másik listaelemben tudjuk használni M3 néven.
+In this case, we create a new finite automaton from the union of the finite automata M1 and M2.
+From this we get a new finite automaton and we can use it in another list element called M3.
 
 
-| Elérhető függvények                                    | Leírás                                                                                                                                      |
+| Available functions                                    | Description |
 |:-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| *min(`FinalStateMachine`)*                             | létrehoz egy minimalizált Véges automataet                                                                                                      |
-| *det(`FinalStateMachine`)*                             | determinizált Véges automataet készíti el a korábbiból                                                                                          |
-| *union(`FinalStateMachine`, `FinalStateMachine`)*      | két Véges automata unióját adja vissza                                                                                                          |
-| *difference(`FinalStateMachine`, `FinalStateMachine`)* | két Véges automata különbségét adja vissza                                                                                                      |
-| *intersect(`FinalStateMachine`, `FinalStateMachine`)*  | két Véges automata metszetét adja vissza                                                                                                        |
-| *available(`FinalStateMachine`)*                       | meghatároz egy új automatát, amelyet az előző Véges automata elérhető állapotaiból építi fel                                                    |
-| *complement(`FinalStateMachine`)*                      | az eredeti Véges automata komplementer nyelvét elfogadó automatát adja vissza                                                                   |
-| *epsfree(`FinalStateMachine`)*                         | visszaad egy epszilon átmenettől mentes Véges automataet                                                                                        |
-| *concat(`FinalStateMachine`, `FinalStateMachine`)*                        | két Véges automatahez rendel egy olyan automatát, aminek a nyelvtana a két bemeneti Véges automata nyelvtanainak a konkatenáltja                    |
-| *close(`FinalStateMachine`)*                           | a nyelv tranzitív lezártjához tartozó automatát adja vissza                                                                                 |
-| *clean(`FinalStateMachine`)*                           | az összes állapotot veszi sorra, és az A, B, C nagybetűkön végigmenve átnevezi az állapotokat, ezzel a hosszú állapotnevek leegyszerűsödnek |
+| *min(`FinalStateMachine`)*                             | creates a minimized Finite State Machine |
+| *det(`FinalStateMachine`)*                             | creates a determinized finite state machine from the previous one |
+| *union(`FinalStateMachine`, `FinalStateMachine`)*      | returns the union of two finite automata |
+| *difference(`FinalStateMachine`, `FinalStateMachine`)* | returns the difference of two Finite automata |
+| *intersect(`FinalStateMachine`, `FinalStateMachine`)*  | returns the intersection of two finite automata |
+| *available(`FinalStateMachine`)*                       | defines a new automaton, built from the available states of the previous finite automaton |
+| *complement(`FinalStateMachine`)*                      | returns an automaton accepting the complementary language of the original finite state machine |
+| *epsfree(`FinalStateMachine`)*                         | returns a finite state machine free of epilon transitions |
+| *concat(`FinalStateMachine`)*                          | assigns to two Finite automata an automaton whose grammar is the concatenate of the grammars of the two input Finite automata |
+| *close(`FinalStateMachine`)*                           | returns the automaton associated with the transitive closure of the language |
+| *clean(`FinalStateMachine`)*                           | takes all states and renames the states by going through the capital letters A, B, C, thus simplifying long state names |
 
 
-## Kifejezésből Véges automata
-Legyen adott egy `M1` automatánk kódja a programunk számára az első lista elemben,
-továbbá legyen ehhez egy kifejezés, például `M_2 = min(det(epsfree(M1)))` a másodikban.
-Ekkor lehetőségünk van a második lista elem jobb felső sarkán lévő forgó nyílra kattintva 
-átalakítani a kifejezést a gépet leíró nyelvére.
+## Expression from finite automaton
+Given a code for an `M1` automaton for our program in the first list item,
+and an expression for it, e.g. `M_2 = min(det(epsfree(M1)))` in the second.
+Then we have the possibility to click on the rotating arrow in the upper right corner of the second list element
+to convert the expression into the language describing the machine.
 
-Például legyen a következő az `M1` Véges automata:
+For example, let `M1` be a finite automaton:
 ```yaml
 FinalStateMachine:
 name: M1
@@ -170,11 +175,11 @@ transitions:
   - B a R
   - R . R
 ```
-A kifejezés pedig:
+And the expression:
 ```
 M2=det(epsfree(M1))
 ```
-Konvertálás gombra kattintva megkapjuk a kívánt eredményt:
+Click on convert button to get the desired result:
 ```yaml
 FinalStateMachine:
 name: detefM1
@@ -197,33 +202,32 @@ transitions:
   - RS b RS
 ```
 
-## Szimuláció
-A program az egyes gépek esetében támogatja a szimulációt,
-ezzel megnézhetjük, hogy adott bemenetre, mi megy végbe a gépen.
+## Simulation
+The program supports simulation for each machine,
+to see what is happening on the machine for a given input.
 
-A lap alján három akciót hajthatunk végre:
-  - újrakezdés: futást leállítja, és visszaállítja az eredeti állapotba
-  - lefuttatás: a teljes szimulációt lefuttatja, és a végső állapotban megáll
-  - léptetés:
-    - determinisztikus esetben a következő egyetlen átmenetet választva léptethetjük a gépet a következő állapotba
-    - nem determinisztikus esetben kiválaszthatjuk melyik átmenet irányába szeretnénk tovább lépni
-    - lehetőség van lépkedni a múltba visszafelé a gép állapotai között
-
-
-A szalagot az akció gombok mellett láthatjuk jobb oldalt. 
-A kijelölt piros hátterű karakternél tart az író olvasó fej 
-(Véges automata esetében azt a megjelölt betűt olvassuk éppen).
-
-A gráfos reprezentáción is követhetjük éppen hol tartunk,
-mindig a megfelelő állapotot jelöli be vastag piros vonallal.
+At the bottom of the page you can perform three actions:
+- restart: stops running and returns to the original state
+- run: runs the whole simulation and stops at the final state
+- step:
+    - in the deterministic case, we can step the machine to the next state by choosing the following single transition
+    - in the non-deterministic case, we can choose which transition we want to move on to
+    - it is possible to step backwards in time between the states of the machine
 
 
-Turing-gép esetében a szalag automatikusan bővül, ha megy jobbra az író olvasó fej.
+You can see the ribbon next to the action buttons on the right.
+The scanner head is at the selected character with the red background
+(In the case of a finite automaton, the marked letter is being read).
 
-Amennyiben a gépünk nem determinisztikus lehetőség van dönteni,
-hogy melyik irányt válassza a lehetőségek közül. Ezt a megfelelő átmenetre kattintva tehetjük meg.
+You can also follow where you are in the graphical representation,
+the corresponding state is always indicated by a bold red line.
 
-Lehetőség van a korábbi állapotokat megtekinteni a futtatás során, 
-így ha például egy nem determinisztikus döntésnek egy másik ágát szeretnénk megnézni, 
-akkor visszaléphetünk egy korábbi döntésünkre, és választhatunk másképpen, majd ezzel az új döntéssel mehetünk tovább.
+In the case of a Turing machine, the tape automatically expands when you move to the right of the scanner reading head.
+
+If our machine is not deterministic, there is a choice,
+which direction to choose among the options. You can do this by clicking on the appropriate transition.
+
+It is possible to view previous states during the run,
+for example, if you want to look at a different branch of a non-deterministic decision,
+you can go back to a previous decision and make a different choice, and then continue with that new decision.
 

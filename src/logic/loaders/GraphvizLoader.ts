@@ -9,7 +9,7 @@ export function loadGraphviz(m: IMachine) {
 
     m?.states.forEach((state) => {
         let selected = m?.getCurrentStates().has(state);
-        let borderColor = selected || m?.getInit() === state ? "crimson" : "gray";
+        let borderColor = selected/* || m?.getInit() === state*/ ? "#158CBA" : "gray";
 
         if (m?.accept.has(state)) {
             dot += `\n    ${state} [label=${state}, shape = doublecircle, color = "${borderColor}", penwidth = 1.5];`;
@@ -21,7 +21,7 @@ export function loadGraphviz(m: IMachine) {
     m?.getTransitions().forEach((v, from) => {
         v.forEach((cs, to) => {
             let selected =  m?.getCurrentStates().has(from) && Array.from(cs).some(c=>c.selected)
-            dot += `\n    ${from} -> ${to} [label = "${Array.from(cs).map(c=>c.label).join(", ")}", id = "${from}${Array.from(cs).map(c=>c.label).join()}${to}", color = "${selected ? "crimson" : "gray"}"];`;
+            dot += `\n    ${from} -> ${to} [label = "${Array.from(cs).map(c=>c.label).join(", ")}", id = "${from}:${to}", color = "${selected ? "#158CBA" : "gray"}"];`;
         });
     });
 

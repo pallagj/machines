@@ -43,8 +43,6 @@ export interface IMachine {
 
     getAsGrammar(): Grammar | null;
 
-    isSteppable(): boolean;
-
     getTapes(): string[];
 
     getIndexes(): number[];
@@ -52,4 +50,7 @@ export interface IMachine {
     setSimulationState(state: MachineState): void;
 
     getSimulationState(): MachineState
+
+    hasTransition(from: string, to: string): boolean;
+    isSteppable(): boolean
 }
