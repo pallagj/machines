@@ -1,9 +1,11 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import expressionsReducer from '../features/control/expressionsSlice';
+import simulationReducer from "../features/view/machines/simulationSlice";
 
 export const store = configureStore({
   reducer: {
     expressionsStore: expressionsReducer,
+    simulationStore: simulationReducer
   },
 });
 

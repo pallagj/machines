@@ -1,6 +1,4 @@
-import {hasIntersect, toArray, union} from "../common";
-import {IMachine} from "../IMachine";
-import {ITransition} from "./StateMachine";
+import {IMachine, MachineState} from "../IMachine";
 import {Grammar} from "./Grammar";
 
 export interface ISimpleTask {
@@ -10,15 +8,12 @@ export interface ISimpleTask {
 }
 
 export class PushdownMachine implements IMachine {
-
     //Simulation
     private currentState: string;
     private input: string;
     private index: number;
     private lifo: string;
     private mState: "rejected" | "accepted" | "working" | "stopped";
-
-    public history: {data: Array<{ machine: IMachine, tag: string }>, index: number} = {data: [], index: 0};
 
     constructor(public name: string, public charset: Set<string>, public states: Set<string>, public init: string, public accept: Set<string>, public transitions: Map</* from */string, Map</* char */string, Set<ISimpleTask>>>,) {
         //Simulation
@@ -34,11 +29,11 @@ export class PushdownMachine implements IMachine {
         this.currentState = this.init;
         this.index = 0;
         this.mState = "working";
+        this.input = "";
         this.lifo = "";
     }
 
-    nextState(index:string="") {
-        this.history.data = this.history.data.slice(0, this.history.index + 1);
+    nextState(index: string = "") {
         if (this.mState === "rejected" || this.mState === "accepted") return;
 
         let char = "_";
@@ -57,8 +52,8 @@ export class PushdownMachine implements IMachine {
         })
 
 
-        this.history.data.push({machine: this, tag: char + task.nextState + task.read  + task.write });
-        this.history.index++;
+        //this.history.data.push({machine: this, tag: char + task.nextState + task.read + task.write});
+        //this.history.index++;
 
         if (task.nextState === "") {
             this.mState = this.accept.has(this.currentState) ? "accepted" : "rejected";
@@ -97,8 +92,8 @@ export class PushdownMachine implements IMachine {
         }
     }
 
-    getTransitions(): Map<string, Map<string, Set<string>>> {
-        let out: Map<string, Map<string, Set<string>>> = new Map();
+    getTransitions() {
+        let out: Map<string, Map<string, Set<{ label: string, selected: boolean }>>> = new Map();
 
         this?.transitions.forEach((v0, from) => {
             v0.forEach((vl, c) => {
@@ -111,8 +106,11 @@ export class PushdownMachine implements IMachine {
                         out?.get(from)?.set(task.nextState, new Set());
                     }
 
-                    out?.get(from)?.get(task.nextState)?.add(
-                        `${c.replace('$', 'ε')}, ${task.read.replace('$', 'ε')}/${task.write.replace('$', 'ε')}`);
+                    out?.get(from)?.get(task.nextState)?.add({
+                            label: `${c.replace('$', 'ε')}, ${task.read.replace('$', 'ε')}/${task.write.replace('$', 'ε')}`,
+                            selected: this.input[this.index] === c
+                        }
+                    );
                 });
             });
         });
@@ -169,20 +167,21 @@ export class PushdownMachine implements IMachine {
         return 2;
     }
 
-    getHistory(): Array<{machine: IMachine, tag: string}> {
+    getHistory(): Array<{ machine: IMachine, tag: string }> {
         return [];
     }
 
     getInit(): string {
         return this.init;
     }
+
     //transitions: Map</* from */string, Map</* char */string, Set<ISimpleTask>>>
-    addTransition(from:string, char:string, task:ISimpleTask) {
-        if(!this.transitions.has(from)){
+    addTransition(from: string, char: string, task: ISimpleTask) {
+        if (!this.transitions.has(from)) {
             this.transitions.set(from, new Map())
         }
 
-        if(!this.transitions.get(from)?.has(char)) {
+        if (!this.transitions.get(from)?.has(char)) {
             this.transitions.get(from)?.set(char, new Set());
         }
 
@@ -191,6 +190,34 @@ export class PushdownMachine implements IMachine {
 
     getAsGrammar(): Grammar | null {
         return null;
+    }
+
+    getIndexes(): number[] {
+        return [this.index, this.lifo.length - 1];
+    }
+
+    getTapes(): string[] {
+        return [this.input, this.lifo];
+    }
+
+    getSimulationState(): MachineState {
+        let char = this.index === 0 ? '' : this.input[this.index - 1];
+
+        return {
+            label: char + Array.from(this.getCurrentStates()).join(''),
+            tapes: this.getTapes(),
+            indexes: this.getIndexes(),
+            currentStates: Array.from(this.getCurrentStates()),
+            state: this.getMachineState()
+        }
+    }
+
+    setSimulationState(state: MachineState): void {
+        this.input = state.tapes[0];
+        this.lifo = state.tapes[1];
+        this.index = state.indexes[0];
+        this.currentState = state.currentStates[0];
+        this.mState = state.state;
     }
 
 }

@@ -1,0 +1,77 @@
+
+.simulation {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: white;
+    border-radius: 14px;
+    display: inline-flex;
+}
+
+.controllers {
+    padding: 3px 8px 3px 8px;
+    display: flex;
+    z-index: 2;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #8080808c;
+}
+
+
+.simulation .controller {
+    margin: 6px 2px 6px 2px;
+    border-radius: 10px;
+}
+
+.tape {
+    display: flex;
+    /* position: absolute;
+     left: 0%;
+     top: -90%;*/
+    border: 1.1px solid #8080808c;
+    border-radius: 7px;
+    background: white;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 1;
+    margin: 5px;
+}
+
+.simulation > input {
+    margin-left: 3px;
+}
+
+.tape > .cell {
+    display: flex;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-right: 1px solid #8080808c;
+    align-items: center;
+    width: 30px;
+}
+
+.tape > .active {
+
+}
+.tape > .cell:last-of-type {
+    border-right: 0 solid transparent;
+}
+
+.tape .active {
+    border-radius: 8px;
+    background: #dc3545;
+    color: white;
+}
+
+.tape-results {
+    display: flex;
+}
+
+.results {
+    padding: 3px;
+    align-self: center;
+}
+
+a {
+    text-transform: none;
+}

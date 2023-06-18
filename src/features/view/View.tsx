@@ -14,6 +14,7 @@ export function View() {
     const store = window.__STORE__;
 
     useAppSelector(selectExpressions);
+
     let selectedIndex = useAppSelector(selectFocusedExpressionIndex);
 
     let value = store.getByIndex(selectedIndex);

@@ -1,6 +1,6 @@
 import {difference, hasIntersect, intersect, toArray, union} from "../common";
 import {Grammar} from "./Grammar";
-import {IMachine} from "../IMachine"
+import {IMachine, MachineState} from "../IMachine"
 
 export interface ITransition {
     from: string;
@@ -138,13 +138,11 @@ export class StateMachine implements IMachine {
     accept: Set<string>;
     transitions: Map</* from */string, Map</* char */string, Set</* to */string>>>;
 
-    public history: { data: Array<{ machine: IMachine, tag: string }>, index: number } = {data: [], index: 0};
-
     //Simulation
     private currentStates: Set<string>;
     private input: string;
     private index: number;
-    private mState: "rejected" | "accepted" | "working";
+    private mState: "rejected" | "accepted" | "working" | "stopped";
 
     constructor(name: string, charset: Array<string>, states: Array<string>, init: string, accept: Array<string>, transitions: Map<string, Map<string, Set<string>>>) {
         this.name = name;
@@ -153,21 +151,12 @@ export class StateMachine implements IMachine {
         this.init = init;
         this.accept = new Set(accept);
         this.transitions = transitions;
-        this.history = {data: [], index: 0};
 
         this.currentStates = new Set([this.init]);
         this.addEpsStates();
         this.input = "";
         this.index = 0;
         this.mState = "working";
-
-        /* history */
-        {
-            let char = this.input.charAt(this.index);
-            let m = this;//.clone();
-            this.history.data.push({machine: m, tag: toArray(this.currentStates).join("") + char});
-            this.history.index = 0;
-        }
     }
 
     static createMachine(numberOfStates: number, numberOfChars: number): StateMachine {
@@ -209,14 +198,7 @@ export class StateMachine implements IMachine {
         this.addEpsStates();
         this.index = 0;
         this.mState = "working";
-        /* history */
-        {
-            let char = this.input.charAt(this.index);
-            let m = this.clone();
-            this.history.data = [];
-            this.history.data.push({machine: m, tag: toArray(this.currentStates).join("") + char});
-            this.history.index = 0;
-        }
+        this.input = "";
     }
 
     addEpsStates(startStates: Set<string> = this.currentStates) {
@@ -241,7 +223,6 @@ export class StateMachine implements IMachine {
     }
 
     nextState(index: string = "") {
-        this.history.data = this.history.data.slice(0, this.history.index + 1)
         if (this.mState === "rejected" || this.mState === "accepted") return;
 
         let newStates: Set<string> = new Set();
@@ -275,8 +256,6 @@ export class StateMachine implements IMachine {
             let m = this.clone();
             m.index++;
             char = this.input.charAt(m.index)
-            this.history.data.push({machine: m, tag: toArray(this.currentStates).join("") + char});
-            this.history.index++;
             // }
 
             this.index++;
@@ -303,8 +282,8 @@ export class StateMachine implements IMachine {
         return this.transitions.get(from)?.get(c)?.values().next().value;
     }
 
-    getTransitions(): Map<string, Map<string, Set<string>>> {
-        let out: Map<string, Map<string, Set<string>>> = new Map();
+    getTransitions(){
+        let out: Map<string, Map<string, Set<{label:string,selected: boolean}>>> = new Map();
 
         this?.transitions.forEach((v0, from) => {
             v0.forEach((vl, c) => {
@@ -317,7 +296,7 @@ export class StateMachine implements IMachine {
                         out?.get(from)?.set(to, new Set());
                     }
 
-                    out?.get(from)?.get(to)?.add(c.replace('$', 'ε'));
+                    out?.get(from)?.get(to)?.add({label:c.replace('$', 'ε'), selected: this.input[this.index] === c})
                 });
             });
         });
@@ -388,7 +367,6 @@ export class StateMachine implements IMachine {
         newMachine.currentStates = new Set<string>(this.currentStates);
         newMachine.addEpsStates()
         newMachine.index = this.index;
-        newMachine.history = this.history;
         newMachine.mState = this.mState;
         newMachine.input = this.input;
 
@@ -396,20 +374,17 @@ export class StateMachine implements IMachine {
     }
 
     hasEps(): boolean {
-        return Array.from(this.transitions.values()).some(innerMap =>
-            Array.from(innerMap.keys()).includes("$")
-        );
+        return Array.from(this.transitions.values()).some(innerMap => Array.from(innerMap.keys()).includes("$"));
     }
 
-    isComplete() : boolean {
-        return Array.from(this.transitions.values()).every(innerMap =>
-            difference(this.charset, new Set(innerMap.keys())).size === 0//Array.from(innerMap.keys()).includes("$")
+    isComplete(): boolean {
+        return Array.from(this.transitions.values()).every(innerMap => difference(this.charset, new Set(innerMap.keys())).size === 0//Array.from(innerMap.keys()).includes("$")
         );
     }
 
     determination(): StateMachine {
-        if(this.hasEps()) throw Error("Machine has ε!")
-        if(!this.isComplete()) throw Error("Machine is not complete!")
+        if (this.hasEps()) throw Error("Machine has ε!")
+        if (!this.isComplete()) throw Error("Machine is not complete!")
         let name = "det" + this.name;
         let init = this.init;
         let charset = Array.from(this.charset);
@@ -426,9 +401,9 @@ export class StateMachine implements IMachine {
     }
 
     minimize(): StateMachine {
-        if(this.hasEps()) throw Error("Machine has ε!")
-        if(!this.isComplete()) throw Error("Machine is not complete!")
-        if(!this.isDeterministic()) throw Error("Machine is not deterministic!")
+        if (this.hasEps()) throw Error("Machine has ε!")
+        if (!this.isComplete()) throw Error("Machine is not complete!")
+        if (!this.isDeterministic()) throw Error("Machine is not deterministic!")
 
         let m = this.clone();
 
@@ -508,13 +483,13 @@ export class StateMachine implements IMachine {
     it is complete!!
      */
     union(otherMachine: StateMachine, operation: string) {
-        if(this.hasEps()) throw Error("First machine has ε!")
-        if(!this.isComplete()) throw Error("First machine is not complete!")
-        if(!this.isDeterministic()) throw Error("First machine is not deterministic!")
+        if (this.hasEps()) throw Error("First machine has ε!")
+        if (!this.isComplete()) throw Error("First machine is not complete!")
+        if (!this.isDeterministic()) throw Error("First machine is not deterministic!")
 
-        if(otherMachine.hasEps()) throw Error("Second machine has ε!")
-        if(!otherMachine.isComplete()) throw Error("Second machine is not complete!")
-        if(!otherMachine.isDeterministic()) throw Error("Second machine is not deterministic!")
+        if (otherMachine.hasEps()) throw Error("Second machine has ε!")
+        if (!otherMachine.isComplete()) throw Error("Second machine is not complete!")
+        if (!otherMachine.isDeterministic()) throw Error("Second machine is not deterministic!")
 
         let m1 = this.clone();
         let m2 = otherMachine.clone();
@@ -693,9 +668,9 @@ export class StateMachine implements IMachine {
     }
 
     reverse(): StateMachine {
-        if(this.hasEps()) throw Error("Machine has ε!")
-        if(!this.isComplete()) throw Error("Machine is not complete!")
-        if(!this.isDeterministic()) throw Error("Machine is not deterministic!")
+        if (this.hasEps()) throw Error("Machine has ε!")
+        if (!this.isComplete()) throw Error("Machine is not complete!")
+        if (!this.isDeterministic()) throw Error("Machine is not deterministic!")
 
         let m = this.clone();
 
@@ -1198,6 +1173,33 @@ export class StateMachine implements IMachine {
         })
         m.transitions = newTransitions;
         return m;
+    }
+
+    getIndexes(): number[] {
+        return [this.index];
+    }
+
+    getTapes(): string[] {
+        return [this.input];
+    }
+
+    getSimulationState(): MachineState {
+        let char = this.index === 0 ? '' : this.input[this.index - 1];
+
+        return {
+            label: char + Array.from(this.getCurrentStates()).join(''),
+            tapes: this.getTapes(),
+            indexes: this.getIndexes(),
+            currentStates: Array.from(this.getCurrentStates()),
+            state: this.getMachineState()
+        };
+    }
+
+    setSimulationState(state: MachineState): void {
+        this.input = state.tapes[0];
+        this.index = state.indexes[0];
+        this.currentStates = new Set(state.currentStates);
+        this.mState = state.state;
     }
 
     private detHelp(newM: StateMachine, states: Set<string>) {

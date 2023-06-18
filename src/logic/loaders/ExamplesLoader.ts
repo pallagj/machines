@@ -18,7 +18,7 @@ StateMachine:
       - A b B
       - B a R
       - R . R
-  Pair number:
+  Even number:
     name: name
     charset: 0, 1
     states: S, A, R

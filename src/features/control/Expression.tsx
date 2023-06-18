@@ -19,6 +19,8 @@ import {
 import {SiConvertio} from "react-icons/si";
 import {VscChromeClose} from "react-icons/vsc";
 import {javascript} from '@codemirror/lang-javascript';
+import {initSimulation} from "../view/machines/simulationSlice";
+import {Grammar} from "../../logic/expressions/Grammar";
 
 interface ExpressionProps {
     index: number,
@@ -106,6 +108,11 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
             }}
             onFocus={() => {
                 dispatch(setFocusedExpressionIndex(props.index))
+                let m = store.getByIndex(props.index);
+                if(m !== null && !(m instanceof Grammar)) {
+                    m.reset();
+                    dispatch(initSimulation(m))
+                }
             }}
         >
             {(convCode !== null && convCode !== undefined) ? (<button className={"convert-expr"} onClick={() => {

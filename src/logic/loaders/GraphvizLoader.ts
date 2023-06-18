@@ -20,8 +20,8 @@ export function loadGraphviz(m: IMachine) {
 
     m?.getTransitions().forEach((v, from) => {
         v.forEach((cs, to) => {
-            let selected = m?.getCurrentStates().has(from) && toArray(cs).includes(m?.getTapeValue(0).charAt(m?.getTapeIndex(0)));
-            dot += `\n    ${from} -> ${to} [label = "${toArray(cs).join(", ")}", id = "${from}${toArray(cs).join()}${to}", color = "${selected ? "crimson" : "gray"}"];`;
+            let selected =  m?.getCurrentStates().has(from) && Array.from(cs).some(c=>c.selected)
+            dot += `\n    ${from} -> ${to} [label = "${Array.from(cs).map(c=>c.label).join(", ")}", id = "${from}${Array.from(cs).map(c=>c.label).join()}${to}", color = "${selected ? "crimson" : "gray"}"];`;
         });
     });
 
