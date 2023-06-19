@@ -18,8 +18,9 @@ export function View() {
     let selectedIndex = useAppSelector(selectFocusedExpressionIndex);
 
     let value = store.getByIndex(selectedIndex);
+    let error = store.getErrorByIndex(selectedIndex);
 
-    if (value === undefined || value === null) {
+    if (error || value === undefined || value === null) {
         return (<div></div>);
     }
 

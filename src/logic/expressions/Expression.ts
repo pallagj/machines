@@ -256,6 +256,7 @@ export class Expression {
                     if (code[j] === "(") counter++;
                     if (code[j] === ")") counter--;
                 }
+                m = this.eval(code.substring(i + 1, j)) as StateMachine;
                 i = j;
             }
 
@@ -264,7 +265,7 @@ export class Expression {
                     m = m.close();
                 }
 
-                machine = (machine === null ? m : Expression.functions["StateMachine"].concat([machine, m]));
+                machine = (machine === null ? m : machine.concat(m));
             }
         }
 
