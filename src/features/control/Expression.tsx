@@ -19,7 +19,6 @@ import {
 import {SiConvertio} from "react-icons/si";
 import {VscChromeClose} from "react-icons/vsc";
 import {javascript} from '@codemirror/lang-javascript';
-import {initSimulation} from "../view/machines/simulationSlice";
 import {Grammar} from "../../logic/expressions/Grammar";
 
 interface ExpressionProps {
@@ -74,7 +73,7 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
 
     return <div
         className={
-        "pt-2 pb-2 border rounded "
+            "pt-2 pb-2 border rounded "
             + (error ? "border-danger" : (hasFocus ? "border-primary" : ""))
         }>
         <div
@@ -109,9 +108,8 @@ export const Expression: React.FC<ExpressionProps> = (props) => {
             onFocus={() => {
                 dispatch(setFocusedExpressionIndex(props.index))
                 let m = store.getByIndex(props.index);
-                if(m !== null && !(m instanceof Grammar)) {
+                if (m !== null && !(m instanceof Grammar)) {
                     m.reset();
-                    dispatch(initSimulation(m))
                 }
             }}
         >

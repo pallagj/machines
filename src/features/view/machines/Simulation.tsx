@@ -17,6 +17,8 @@ import {
 import {ImPlay3, ImStop2} from "react-icons/im";
 import {VscCheck, VscChromeClose, VscDebugStepOver} from "react-icons/vsc";
 import {AiOutlineEdit} from "react-icons/ai";
+import {selectExpressions, selectFocusedExpressionIndex} from "../../control/expressionsSlice";
+import {useSelector} from "react-redux";
 
 interface MachineProps {
     machine: IMachine
@@ -24,6 +26,8 @@ interface MachineProps {
 
 
 export const Simulation: React.FC<MachineProps> = (props) => {
+    let expr = useSelector(selectExpressions);
+    let selectedInex = useAppSelector(selectFocusedExpressionIndex);
     const textInputRef = useRef<HTMLInputElement>(null);
     let [activeTapeIndex, setActiveTapeIndex] = React.useState(-1);
 
@@ -60,7 +64,7 @@ export const Simulation: React.FC<MachineProps> = (props) => {
                 edge.removeEventListener("click", clickHandler);
             }
         };
-    }, []);
+    }, [expr, selectedInex]);
 
     //dispatch(initSimulation(m)) //TODO ?
     if (currentSimulation === null) {

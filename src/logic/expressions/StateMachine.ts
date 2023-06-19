@@ -478,11 +478,33 @@ export class StateMachine implements IMachine {
         return m;
     }
 
+
     /*
     it is deterministic!!
     it is complete!!
      */
-    union(otherMachine: StateMachine, operation: string) {
+    union(otherMachine: StateMachine, operation: string, epsilon: boolean = false): StateMachine {
+        if(epsilon ||(!this.isComplete() || !otherMachine.isComplete() || !this.isDeterministic() || !otherMachine.isDeterministic()) && operation === "union") {
+            let m1 = this.clone();
+            let m2 = otherMachine.clone();
+
+            this.makeUniqueStates(m1, m2);
+
+            m1.charset = union(m1.charset, m2.charset);
+            m1.states = union(m1.states, m2.states);
+            m2.transitions.forEach((value, from) => {
+                m1.transitions.set(from, value);
+            })
+            m1.accept = union(m1.accept, m2.accept);
+
+            let newInit = m1.newStateName(m1.states);
+            this.addTransition(m1.transitions, newInit, "$", m1.init, false);
+            this.addTransition(m1.transitions, newInit, "$", m2.init, false);
+            m1.init = newInit;
+
+            return m1.available().clean()//.epsfree().clean();
+        }
+
         if (this.hasEps()) throw Error("First machine has ε!")
         if (!this.isComplete()) throw Error("First machine is not complete!")
         if (!this.isDeterministic()) throw Error("First machine is not deterministic!")
@@ -581,7 +603,7 @@ export class StateMachine implements IMachine {
             })
         })
 
-        return newM;
+        return newM.available();
     }
 
     naiveMinimize() {
@@ -951,7 +973,7 @@ export class StateMachine implements IMachine {
         }
     }
 
-    complete(newState: string): StateMachine {
+    complete(newState: string = this.newStateName(this.states)): StateMachine {
         let newM = this.clone();
 
         if (newState == undefined) throw new Error("Complete: define reject state!");
@@ -1093,7 +1115,7 @@ export class StateMachine implements IMachine {
             if (m2.states.has(state)) {
                 let newState = m1.newStateName(unionStates);
 
-                this.renameState(state, newState, m2);
+                m2.renameState(state, newState, m2);
 
                 unionStates.add(newState);
             }
@@ -1103,6 +1125,27 @@ export class StateMachine implements IMachine {
     concat(m2: StateMachine): StateMachine {
         let m1 = this.clone();
         m2 = m2.clone();
+
+        if(true) {
+            m2.makeUniqueStates(m1, m2);
+            m1.states = union(m1.states, m2.states);
+            m1.name = m1.name + 'And' + m2.name;
+            m1.charset = union(m1.charset, m2.charset);
+            m2.transitions.forEach((value, from) => {
+                m1.transitions.set(from, value);
+            })
+            m1.accept.forEach(a => {
+                m1.addTransition(m1.transitions, a, "$", m2.init, false);
+            });
+            m1.accept.clear();
+            m2.accept.forEach(a => {
+                m1.accept.add(a);
+            })
+
+            return m1.epsfree().available().clean()
+        }
+
+
         m2.renameState(m2.init, m1.newStateName(union(m1.states, m2.states), "DELETE"), m2);
         this.makeUniqueStates(m1, m2);
         //m2.states.add(m1.init)
@@ -1143,9 +1186,26 @@ export class StateMachine implements IMachine {
     close(): StateMachine {
         let m1 = this.clone();
 
+        //If there is transition with: from somewhere and to target the init state, then create new init state
+        let needInit = false;
+        this.transitions.forEach((value, from) => {
+            value.forEach((targets, char) => {
+                if(targets.has(m1.init)) {
+                    needInit = true;
+                }
+            })
+        });
+        if(needInit) {
+            let newState = m1.newStateName(m1.states);
+            m1.states.add(newState);
+            m1.addTransition(m1.transitions, newState, '$', m1.init, false);
+            m1.init = newState;
+        }
+
         m1.accept.forEach(m1AcceptState => {
             this.addTransition(m1.transitions, m1AcceptState, '$', m1.init, false);
         })
+        m1.accept.add(m1.init);
 
         return m1;
     }
