@@ -235,7 +235,7 @@ export class StateMachine implements IMachine {
             let [from, to] = from_to.split(":");
 
             this?.transitions?.get(from)?.forEach((states, c) => {
-                if(states.has(to) && (c === "$" || c === this.lastChar)) {
+                if (states.has(to) && (c === "$" || c === this.lastChar)) {
                     newStates = new Set<string>(to);
                     this.lastChar = c
                 }
@@ -257,7 +257,7 @@ export class StateMachine implements IMachine {
                 this.mState = hasIntersect(newStates, this.accept) ? "accepted" : "rejected";
             }
 
-            if(this.lastChar !== "$")
+            if (this.lastChar !== "$")
                 this.index++;
         }
     }
@@ -484,7 +484,7 @@ export class StateMachine implements IMachine {
     it is complete!!
      */
     union(otherMachine: StateMachine, operation: string, epsilon: boolean = false): StateMachine {
-        if(epsilon ||(!this.isComplete() || !otherMachine.isComplete() || !this.isDeterministic() || !otherMachine.isDeterministic()) && operation === "union") {
+        if (epsilon || (!this.isComplete() || !otherMachine.isComplete() || !this.isDeterministic() || !otherMachine.isDeterministic()) && operation === "union") {
             let m1 = this.clone();
             let m2 = otherMachine.clone();
 
@@ -1028,32 +1028,22 @@ export class StateMachine implements IMachine {
 
         let availableStates = newMachine.states;
 
-        while (availableStates.size > 0) {
-            let sharedEpsStates: Set<string> = new Set(availableStates.keys().next().value);
-            this.addEpsStates(sharedEpsStates);
+        availableStates.forEach(currentState => {
+            let reachedEpsStates: Set<string> = new Set(currentState);
+            this.addEpsStates(reachedEpsStates);
 
-
-            sharedEpsStates.forEach(epsState => {
-                let targetEpsStates = newMachine.transitions.get(epsState)?.get("$");
-
-                targetEpsStates?.forEach(epsStateForCopy => {
-                    sharedEpsStates.forEach(epsStateForPaste => {
-                        this.copyTransitions(newMachine, epsStateForCopy, epsStateForPaste);
-                    });
-                });
-
-                newMachine.transitions.get(epsState)?.get("$")?.clear();
+            reachedEpsStates.forEach(epsStateForCopy => {
+                this.copyTransitions(newMachine, epsStateForCopy, currentState);
             });
 
-            if (intersect(sharedEpsStates, newMachine.accept).size > 0) newMachine.accept = union(newMachine.accept, sharedEpsStates);
-
-            availableStates = difference(availableStates, sharedEpsStates);
-        }
+            if (intersect(reachedEpsStates, newMachine.accept).size > 0)
+                newMachine.accept.add(currentState);
+        })
 
         //Remove empty eps transitions
         newMachine.transitions.forEach((transitions, from, map) => {
             transitions.forEach((targets, char, map) => {
-                if (targets.size === 0) {
+                if (targets.size === 0 || char === '$') {
                     map.delete(char);
                 }
             });
@@ -1126,7 +1116,7 @@ export class StateMachine implements IMachine {
         let m1 = this.clone();
         m2 = m2.clone();
 
-        if(true) {
+        if (true) {
             m2.makeUniqueStates(m1, m2);
             m1.states = union(m1.states, m2.states);
             m1.name = m1.name + 'And' + m2.name;
@@ -1190,12 +1180,12 @@ export class StateMachine implements IMachine {
         let needInit = false;
         this.transitions.forEach((value, from) => {
             value.forEach((targets, char) => {
-                if(targets.has(m1.init)) {
+                if (targets.has(m1.init)) {
                     needInit = true;
                 }
             })
         });
-        if(needInit) {
+        if (needInit) {
             let newState = m1.newStateName(m1.states);
             m1.states.add(newState);
             m1.addTransition(m1.transitions, newState, '$', m1.init, false);
@@ -1350,12 +1340,12 @@ export class StateMachine implements IMachine {
     hasTransition(from: string, to: string): boolean {
         let char = this.input.charAt(this.index);
 
-        if(!this.currentStates.has(from))
+        if (!this.currentStates.has(from))
             return false;
 
         let result = false;
         this.transitions.get(from)?.forEach((value, c) => {
-            if (value.has(to) && (c === char || c === '$') ) {
+            if (value.has(to) && (c === char || c === '$')) {
                 result = true;
             }
         })
