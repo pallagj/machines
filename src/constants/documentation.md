@@ -8,7 +8,7 @@ You can insert a new item after the one you are currently editing by typing `alt
 
 You can also define your own descriptive text or use the `Add Expression' menu that appears to load an example.
 You can create several types of descriptive text:
-- Finite automaton
+- State machine (finite automaton)
 - Pushdown machine
 - Turing machine
 - Formal grammar
@@ -20,10 +20,21 @@ On the right you can see the graphical representation of our machine and the cor
 On this screen we have the possibility to simulate.
 
 
-## Finite automaton
+## Short cuts
+| Short cut           | Description                                                                                                    |
+|:--------------------|----------------------------------------------------------------------------------------------------------------|
+| `alt` + `enter`     | add a new row at the end                                                                                       |
+| type name + `enter` | for example if you type `TuringMachine` and after hit `enter` it creates an example of Turing machine          |
+| $                   | epsilon                                                                                                        |
+| .                   | replace it in the transition with every possible value (at states every states, at character every characters) |
+| &                   | use the same character/state as earlier                                                                        |
+
+
+
+## State machine
 Let us examine the code of the following finite automaton:
 ````yaml
-FiniteAutomaton:
+StateMachine:
   name: M1
   charset: a, b
   states: S, K, A-B, R
@@ -138,19 +149,22 @@ In this case, we create a new finite automaton from the union of the finite auto
 From this we get a new finite automaton and we can use it in another list element called M3.
 
 
-| Available functions                                    | Description |
-|:-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| *min(`FinalStateMachine`)*                             | creates a minimized Finite State Machine |
-| *det(`FinalStateMachine`)*                             | creates a determinized finite state machine from the previous one |
-| *union(`FinalStateMachine`, `FinalStateMachine`)*      | returns the union of two finite automata |
-| *difference(`FinalStateMachine`, `FinalStateMachine`)* | returns the difference of two Finite automata |
-| *intersect(`FinalStateMachine`, `FinalStateMachine`)*  | returns the intersection of two finite automata |
-| *available(`FinalStateMachine`)*                       | defines a new automaton, built from the available states of the previous finite automaton |
-| *complement(`FinalStateMachine`)*                      | returns an automaton accepting the complementary language of the original finite state machine |
-| *epsfree(`FinalStateMachine`)*                         | returns a finite state machine free of epilon transitions |
-| *concat(`FinalStateMachine`)*                          | assigns to two Finite automata an automaton whose grammar is the concatenate of the grammars of the two input Finite automata |
-| *close(`FinalStateMachine`)*                           | returns the automaton associated with the transitive closure of the language |
-| *clean(`FinalStateMachine`)*                           | takes all states and renames the states by going through the capital letters A, B, C, thus simplifying long state names |
+| Available functions                           | Description                                                                                                                   |
+|:----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| *random(`NumberOfStates`, `NumberOfCharset`)* | creates a complete Finite State Machine with random number of states and charset                                              |
+| *complete(`StateMachine`, `StateToReject`)*   | creates a complete Finite State Machine with the new rejection state                                                          |
+| *det(`StateMachine`)*                         | creates a determinized finite state machine from the previous one                                                             |
+| *min(`StateMachine`)*                         | creates a minimized Finite State Machine                                                                                      |
+| *available(`StateMachine`)*                   | defines a new automaton, built from the available states of the previous finite automaton                                     |
+| *clean(`StateMachine`)*                       | takes all states and renames the states by going through the capital letters A, B, C, thus simplifying long state names       |
+| *epsfree(`StateMachine`)*                     | returns a finite state machine free of epilon transitions                                                                     |
+| *close(`StateMachine`)*                       | returns the automaton associated with the transitive closure of the language                                                  |
+| *complement(`StateMachine`)*                  | returns an automaton accepting the complementary language of the original finite state machine                                |
+| *concat(`StateMachine`)*                      | assigns to two Finite automata an automaton whose grammar is the concatenate of the grammars of the two input Finite automata |
+| *difference(`StateMachine`, `StateMachine`)*  | returns the difference of two Finite automata                                                                                 |
+| *intersect(`StateMachine`, `StateMachine`)*   | returns the intersection of two finite automata                                                                               |
+| *reverse(`StateMachine`)*                     | returns a finite automaton that accepts the backwards version of the previously accepted words                                |
+| *union(`StateMachine`, `StateMachine`)*       | returns the union of two finite automata                                                                                      |
 
 
 ## Expression from finite automaton
@@ -181,7 +195,7 @@ M2=det(epsfree(M1))
 ```
 Click on convert button to get the desired result:
 ```yaml
-FinalStateMachine:
+StateMachine:
 name: detefM1
 charset: a, b
 states: S, AS, BS, ARS, BRS, RS
