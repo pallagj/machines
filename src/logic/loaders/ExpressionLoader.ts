@@ -37,8 +37,14 @@ export function loadExpressions(codes: string[]) {
     let values: Map<string, ExpressionValue | string> = new Map<string, ExpressionValue | string>();
 
     codes.forEach((code, index) => {
-        let exprValue = loadYaml(code);
 
+        let exprValue = null;
+        try{
+            exprValue = loadYaml(code);
+        } catch (e) {
+            storeData.setErrorByIndex(index, "Invalid syntax!");
+            return;
+        }
         if (exprValue !== null) {
             let duplicated = storeData.setNameToIndex(exprValue.name, index);
 
